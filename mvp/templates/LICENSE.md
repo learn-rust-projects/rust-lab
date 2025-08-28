@@ -1,9 +1,3 @@
-# Rust Lab
-
-## Introduction
-
-Rust-Lab is a hands-on experimental repository designed to explore various Rust libraries and real-world business scenarios through minimal viable projects (MVPs). Have fun! 🎉
-
 ## License
 
 Licensed under either of

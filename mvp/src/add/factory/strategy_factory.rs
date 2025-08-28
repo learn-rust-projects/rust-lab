@@ -17,7 +17,7 @@ impl AddStrategyFactory {
     }
 
     fn register(&mut self, v: Box<dyn AddStrategy>) {
-        let k = v.str().to_owned();
+        let k = v.name().to_owned();
         self.handlers.insert(k, v);
     }
 
@@ -32,6 +32,8 @@ impl AddStrategyFactory {
             factory.register(Box::new(InitStrategy));
             factory.register(Box::new(MdStrategy));
             factory.register(Box::new(LicStrategy));
+            factory.register(Box::new(VscodeStrategy));
+            factory.register(Box::new(FmtStrategy));
             factory
         });
         &FACTORY
