@@ -4,6 +4,19 @@
 
 Rust-Lab is a hands-on experimental repository designed to explore various Rust libraries and real-world business scenarios through minimal viable projects (MVPs). Have fun! 🎉
 
+## MVP Installation Guide
+
+```bash
+# Make the install script executable
+chmod +x install.sh
+
+# Install MVP globally
+./install.sh install
+
+# Uninstall MVP
+./install.sh uninstall
+```
+
 ## License
 
 Licensed under either of
