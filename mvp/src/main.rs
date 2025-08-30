@@ -5,24 +5,25 @@ use clap::{Parser, Subcommand};
 use mvp::{add::*, error::MvpError};
 use tera::{Context, Result as TeraResult, Tera, Value};
 
-// Custom filter example: does nothing
+// Custom filter: does nothing
 fn do_nothing_filter(value: &Value, _: &HashMap<String, Value>) -> TeraResult<Value> {
     Ok(value.clone())
 }
 
 // Global template singleton
 pub static TEMPLATES: LazyLock<Tera> = LazyLock::new(|| {
-    let mut tera = match Tera::new("templates/**/*") {
-        Ok(t) => t,
-        Err(e) => {
-            eprintln!("Parsing error(s): {}", e);
-            std::process::exit(1);
-        }
-    };
-
+    let mut tera = Tera::default();
+    use mvp::templates::*;
+    tera.add_raw_template("LICENSE-APACHE", LICENSE_APACHE)
+        .unwrap();
+    tera.add_raw_template("LICENSE-MIT", LICENSE_MIT).unwrap();
+    tera.add_raw_template("LICENSE.md", LICENSE).unwrap();
+    tera.add_raw_template("README.md", README).unwrap();
+    tera.add_raw_template("rustfmt.toml", RUSTFMT).unwrap();
+    tera.add_raw_template("vscode/settings.json", SETTINGS)
+        .unwrap();
     tera.autoescape_on(vec![".html", ".sql"]);
     tera.register_filter("do_nothing", do_nothing_filter);
-
     tera
 });
 
@@ -41,9 +42,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// does testing things
+    /// Add a new component
     Add {
-        /// lists test values
+        /// Name of the component to add
         name: String,
     },
 }
@@ -70,7 +71,7 @@ fn main() -> Result<(), MvpError> {
                 println!("Add {}", name);
                 handler.handle(&TEMPLATES, &mut context)?;
             } else {
-                eprintln!("No strategy found for '{}'", name);
+                eprintln!("No strategy found for '{}'.", name);
             }
         }
         None => {
@@ -78,7 +79,7 @@ fn main() -> Result<(), MvpError> {
             if let Some(handler) = AddStrategyFactory::get_add_strategy_factory().get("init") {
                 handler.handle(&TEMPLATES, &mut context)?;
             } else {
-                eprintln!("No strategy found for 'init'");
+                eprintln!("No strategy found for 'init'.");
             }
         }
     }

@@ -2,9 +2,9 @@
 
 ## Introduction
 
-Rust-Lab is a hands-on experimental repository designed to explore various Rust libraries and real-world business scenarios through minimal viable projects (MVPs). Have fun! 🎉
+Rust-Lab is an experimental repository for exploring Rust libraries and real-world business scenarios through minimal viable projects (MVPs). Enjoy hacking! 🎉
 
-## MVP Installation Guide
+## Installation
 
 ```bash
 # Make the install script executable
@@ -21,9 +21,9 @@ chmod +x install.sh
 
 Licensed under either of
 
- * Apache License, Version 2.0
+ - Apache License, Version 2.0
    ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
- * MIT license
+ - MIT license
    ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.

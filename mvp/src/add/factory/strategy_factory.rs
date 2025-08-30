@@ -28,7 +28,6 @@ impl AddStrategyFactory {
     pub fn get_add_strategy_factory() -> &'static AddStrategyFactory {
         static FACTORY: LazyLock<AddStrategyFactory> = LazyLock::new(|| {
             let mut factory = AddStrategyFactory::new();
-            // 注册代码
             factory.register(Box::new(InitStrategy));
             factory.register(Box::new(MdStrategy));
             factory.register(Box::new(LicStrategy));
