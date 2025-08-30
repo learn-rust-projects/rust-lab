@@ -22,6 +22,7 @@ pub static TEMPLATES: LazyLock<Tera> = LazyLock::new(|| {
     tera.add_raw_template("rustfmt.toml", RUSTFMT).unwrap();
     tera.add_raw_template("vscode/settings.json", SETTINGS)
         .unwrap();
+    tera.add_raw_template(".gitignore", _GITIGNORE).unwrap();
     tera.autoescape_on(vec![".html", ".sql"]);
     tera.register_filter("do_nothing", do_nothing_filter);
     tera

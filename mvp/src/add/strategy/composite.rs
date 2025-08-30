@@ -1,6 +1,7 @@
 use super::prelude::*;
 use crate::add::strategy::{
-    fmt_strategy::FmtStrategy, md_strategy::MdStrategy, vscode_strategy::VscodeStrategy,
+    fmt_strategy::FmtStrategy, git_ignore_strategy, md_strategy::MdStrategy,
+    vscode_strategy::VscodeStrategy,
 };
 
 pub struct Composite {
@@ -14,6 +15,7 @@ impl Default for Composite {
                 Box::new(VscodeStrategy),
                 Box::new(FmtStrategy),
                 Box::new(MdStrategy),
+                Box::new(git_ignore_strategy::GitIgnoreStrategy),
             ],
         }
     }

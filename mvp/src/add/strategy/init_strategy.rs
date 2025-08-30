@@ -50,6 +50,8 @@ fn create_project(project_name: &str, disable_vcs: bool) -> Result<(), MvpError>
 
     if status.success() {
         println!("Project '{}' created successfully!", project_name);
+        // 新增cd into the project directory
+        std::env::set_current_dir(project_name)?;
         Ok(())
     } else {
         Err(MvpError::Custom(format!(
