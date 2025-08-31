@@ -345,7 +345,7 @@ pub const SETTINGS: &str = r#"{
     "rust-analyzer.procMacro.enable": true,            // Enable procedural macro expansion
     "rust-analyzer.cargo.autoreload": true,           // Auto-reload Cargo project for accurate analysis
     "rust-analyzer.checkOnSave": true,                // Enable checking code on save
-    "rust-analyzer.check.command": "clippy --fix",          // Use Clippy for on-save checks
+    "rust-analyzer.check.command": "clippy --fix --allow-dirty",          // Use Clippy for on-save checks
     "rust-analyzer.diagnostics.enable": true,         // Enable diagnostics
     "rust-analyzer.diagnostics.disabled": [           // Disable specific diagnostics
         "unresolved-proc-macro",                       // Ignore unresolved procedural macro warnings

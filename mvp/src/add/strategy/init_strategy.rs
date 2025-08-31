@@ -25,7 +25,9 @@ impl AddStrategy for InitStrategy {
             .unwrap_or(false);
 
         create_project(&project_name, disable_vcs)?;
-
+        if disable_vcs {
+            return Ok(());
+        }
         let composite = Composite::default();
         println!("Adding init files...");
         composite.handle(tera, context)?;

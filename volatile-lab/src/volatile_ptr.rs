@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::ptr::NonNull;
+
+    use volatile::VolatilePtr;
 
     #[test]
     fn test_volatile_ptr_write_and_read() {

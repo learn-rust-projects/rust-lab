@@ -892,6 +892,10 @@ name = "unified_error"
 version = "0.1.0"
 
 [[package]]
+name = "unsafecell-lab"
+version = "0.1.0"
+
+[[package]]
 name = "utf8parse"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
