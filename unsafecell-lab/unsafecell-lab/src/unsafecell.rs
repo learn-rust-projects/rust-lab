@@ -1,9 +1,10 @@
 use std::cell::UnsafeCell;
 #[warn(unused)]
+#[allow(dead_code)]
 struct MyStruct {
     data: UnsafeCell<i32>,
 }
-
+#[allow(dead_code)]
 impl MyStruct {
     fn set_data(&self, value: i32) {
         unsafe {

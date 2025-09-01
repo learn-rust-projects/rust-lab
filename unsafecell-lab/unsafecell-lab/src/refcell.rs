@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-
 // Change to English comments
 #[test]
 fn test_refcell_borrowing() {
