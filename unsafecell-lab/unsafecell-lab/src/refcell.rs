@@ -1,6 +1,7 @@
 // Change to English comments
 #[test]
 fn test_refcell_borrowing() {
+    use std::cell::RefCell;
     let x = RefCell::new(5);
 
     // Test mutable borrowing
