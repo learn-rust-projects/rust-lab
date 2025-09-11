@@ -9,20 +9,19 @@ use tera::{Context, Result as TeraResult, Tera, Value};
 fn do_nothing_filter(value: &Value, _: &HashMap<String, Value>) -> TeraResult<Value> {
     Ok(value.clone())
 }
+// include! 会在编译期把文件内容插入这里
+include!("templates.rs");
 
 // Global template singleton
 pub static TEMPLATES: LazyLock<Tera> = LazyLock::new(|| {
     let mut tera = Tera::default();
-    use mvp::templates::*;
-    tera.add_raw_template("LICENSE-APACHE", LICENSE_APACHE)
-        .unwrap();
-    tera.add_raw_template("LICENSE-MIT", LICENSE_MIT).unwrap();
-    tera.add_raw_template("LICENSE.md", LICENSE).unwrap();
-    tera.add_raw_template("README.md", README).unwrap();
-    tera.add_raw_template("rustfmt.toml", RUSTFMT).unwrap();
-    tera.add_raw_template("vscode/settings.json", SETTINGS)
-        .unwrap();
-    tera.add_raw_template(".gitignore", _GITIGNORE).unwrap();
+
+    // 循环注册 build.rs 生成的模板
+    for (name, content) in TEMPLATE_MAP {
+        tera.add_raw_template(name, content).unwrap();
+    }
+
+    // 可选配置
     tera.autoescape_on(vec![".html", ".sql"]);
     tera.register_filter("do_nothing", do_nothing_filter);
     tera

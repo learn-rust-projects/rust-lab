@@ -281,7 +281,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."#;
-pub const LICENSE: &str = r#"## License
+pub const LICENSE_MD: &str = r#"## License
 
 Licensed under either of
 
@@ -297,12 +297,12 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions."#;
-pub const README: &str = r#"# xxx
+pub const README_MD: &str = r#"# xxx
 
 ## Introduction
 
 xxx is xxx. Have fun! 🎉"#;
-pub const RUSTFMT: &str = r#"# =========================================
+pub const RUSTFMT_TOML: &str = r#"# =========================================
 # Language Edition & Experimental Features
 # =========================================
 style_edition = "2024"           # Format using Rust 2024 Edition style
@@ -337,43 +337,39 @@ newline_style = "Unix"             # Use Unix line endings (\n)
 use_field_init_shorthand = true    # Use shorthand for struct initialization: X { a, b }
 use_try_shorthand = true           # Use `?` shorthand for error handling: do_something()? 
 "#;
-pub const SETTINGS: &str = r#"{
+pub const VSCODE_SETTINGS_JSON: &str = r#"{
     // -----------------------------
     // Rust Analyzer Configuration
     // -----------------------------
-    "rust-analyzer.cargo.features": "all",              // Enable all features defined in Cargo.toml
-    "rust-analyzer.procMacro.enable": true,            // Enable procedural macro expansion
-    "rust-analyzer.cargo.autoreload": true,           // Auto-reload Cargo project for accurate analysis
-    "rust-analyzer.checkOnSave": true,                // Enable checking code on save
-    "rust-analyzer.check.command": "clippy --fix --allow-dirty",          // Use Clippy for on-save checks
-    "rust-analyzer.diagnostics.enable": true,         // Enable diagnostics
-    "rust-analyzer.diagnostics.disabled": [           // Disable specific diagnostics
-        "unresolved-proc-macro",                       // Ignore unresolved procedural macro warnings
-        "inactive-code"                                // Ignore inactive code warnings
+    "rust-analyzer.cargo.features": "all", // Enable all features defined in Cargo.toml
+    "rust-analyzer.procMacro.enable": true, // Enable procedural macro expansion
+    "rust-analyzer.cargo.autoreload": true, // Auto-reload Cargo project for accurate analysis
+    "rust-analyzer.checkOnSave": true, // Enable checking code on save
+    "rust-analyzer.check.command": "clippy", // Use Clippy for on-save checks
+    "rust-analyzer.diagnostics.enable": true, // Enable diagnostics
+    "rust-analyzer.diagnostics.disabled": [ // Disable specific diagnostics
+        "unresolved-proc-macro", // Ignore unresolved procedural macro warnings
+        "inactive-code" // Ignore inactive code warnings
     ],
-
     // -----------------------------
     // Formatting and Save Settings
     // -----------------------------
-    "editor.formatOnSave": true,                       // Automatically format code on save
+    "editor.formatOnSave": true, // Automatically format code on save
     "editor.defaultFormatter": "rust-lang.rust-analyzer", // Use Rust Analyzer as the default formatter
-    "files.autoSave": "onFocusChange",                // Auto-save files when changing focus
-
+    "files.autoSave": "onFocusChange", // Auto-save files when changing focus
     // -----------------------------
     // Inlay Hints (Display Type Information)
     // -----------------------------
-    "editor.inlayHints.enabled": "on",                // Enable inlay hints in the editor
-    "rust-analyzer.inlayHints.typeHints.enable": true,       // Show type hints for variables
-    "rust-analyzer.inlayHints.parameterHints.enable": true,  // Show function parameter hints
-    "rust-analyzer.inlayHints.chainingHints.enable": true,   // Show intermediate types in method chains
-
+    "editor.inlayHints.enabled": "on", // Enable inlay hints in the editor
+    "rust-analyzer.inlayHints.typeHints.enable": true, // Show type hints for variables
+    "rust-analyzer.inlayHints.parameterHints.enable": true, // Show function parameter hints
+    "rust-analyzer.inlayHints.chainingHints.enable": true, // Show intermediate types in method chains
     // -----------------------------
     // Optional: Enhanced Error Visibility
     // -----------------------------
-    "errorLens.enabled": true,                         // Enable inline error/warning highlighting
-    "errorLens.fontSize": "12px",                      // Font size for error/warning messages
-    "errorLens.fontWeight": "bold",                    // Font weight
-
+    "errorLens.enabled": true, // Enable inline error/warning highlighting
+    "errorLens.fontSize": "12px", // Font size for error/warning messages
+    "errorLens.fontWeight": "bold", // Font weight
     // -----------------------------
     // Optional: Show TODO / FIXME Comments
     // -----------------------------
@@ -381,6 +377,49 @@ pub const SETTINGS: &str = r#"{
         "TODO",
         "FIXME",
         "BUG"
+    ],
+    "caseConverter.caseCycle": [
+        "original",
+        "const",
+        "pascal",
+        "snake",
+        "kebab"
+    ],
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    }
+}"#;
+pub const VSCODE_TASKS_JSON: &str = r#"{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Clippy Fix Now",
+            "type": "shell",
+            "command": "cargo clippy --fix --allow-dirty",
+            "group": {
+                // VS Code internally binds "build tasks" to Ctrl+Shift+B.
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$rustc"],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
     ]
 }
 "#;
+
+pub static TEMPLATE_MAP: &[(&str, &str)] = &[
+    (".gitignore", _GITIGNORE),
+    ("LICENSE-APACHE", LICENSE_APACHE),
+    ("LICENSE-MIT", LICENSE_MIT),
+    ("LICENSE.md", LICENSE_MD),
+    ("README.md", README_MD),
+    ("rustfmt.toml", RUSTFMT_TOML),
+    ("vscode/settings.json", VSCODE_SETTINGS_JSON),
+    ("vscode/tasks.json", VSCODE_TASKS_JSON),
+];
