@@ -4,30 +4,36 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
-    //name ="myapp", --version will show name
+    name ="myapp", //--version will show name
     version ,
     about = "Short description here",
     long_about = "This is a longer description of your CLI tool.\nIt can span multiple lines, and provides more details in the help output."
 )]
 struct Cli {
-    port: u16,
-
-    /// Optional name to operate on
-    name: Option<String>,
+    /// bool
+    #[arg(short, long)]
+    bool: bool,
 
     /// Sets a custom config file
     #[arg(short, long, value_name = "FILE")]
     config: Option<PathBuf>,
 
-    /// Turn debugging information on
-    #[arg(short, long, action = clap::ArgAction::Count)]
-    debug: u8,
-
-    #[command(subcommand)]
-    command: Option<Commands>,
     // use long arg to receive String argument: not required
     #[arg(long)]
     arg: Option<String>,
+
+    /// Turn debugging information on
+    #[arg(short, long)]
+    debug: u8,
+
+    /// port怎么没有读出来
+    port: u16,
+
+    /// Optional name to operate on
+    name: Option<String>,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
@@ -51,6 +57,8 @@ fn main() {
     if let Some(config_path) = cli.config.as_deref() {
         println!("Value for config: {}", config_path.display());
     }
+
+    println!("port: {:?}", cli.port);
 
     // You can see how many times a particular flag or argument occurred
     // Note, only flags can have multiple occurrences
