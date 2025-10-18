@@ -799,6 +799,7 @@ dependencies = [
 name = "process"
 version = "0.1.0"
 dependencies = [
+ "libc",
  "os_pipe",
 ]
 

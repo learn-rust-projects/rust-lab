@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 os_pipe = "1.2.3"
+libc = "0.2"
