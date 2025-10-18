@@ -55,4 +55,26 @@ mod tests {
 
         Ok(())
     }
+    #[test]
+    fn test_os_pipe() -> io::Result<()> {
+        // 1. 创建匿名管道，返回 (读取端, 写入端)
+        let (mut read_pipe, mut write_pipe) = os_pipe::pipe()?;
+
+        let data_to_send = "Hello from the writer side!";
+
+        // 2. 写入数据到管道
+        println!("写入端正在发送数据: '{}'", data_to_send);
+        write_pipe.write_all(data_to_send.as_bytes())?;
+
+        // 关闭写入端非常重要，否则读取端可能永远不会收到 EOF
+        // 如果不关闭，read_to_string可能会一直阻塞
+        drop(write_pipe);
+
+        // 3. 从管道读取数据
+        let mut buffer = String::new();
+        read_pipe.read_to_string(&mut buffer)?;
+
+        println!("读取端收到的数据: '{}'", buffer);
+        Ok(())
+    }
 }
