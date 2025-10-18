@@ -1,5 +1,5 @@
 [workspace]
 resolver = "3"
 members = [
-  "cli-lab/clap-lab", "error-lab/this_error_demo", "error-lab/unified_error", "high-performance-lab/false-sharing","mvp", "process", "std/fs/file", "template-lab/tera-lab", "test-lab/basic-test", "unsafecell-lab/unsafecell-lab", "volatile-lab",
+  "cli-lab/clap-lab", "error-lab/this_error_demo", "error-lab/unified_error", "high-performance-lab/false-sharing","mvp", "process-lab/process", "process-lab/self-pipe-trick", "std/fs/file", "template-lab/tera-lab", "test-lab/basic-test", "unsafecell-lab/unsafecell-lab", "volatile-lab",
 ]
