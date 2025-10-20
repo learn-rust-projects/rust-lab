@@ -34,7 +34,7 @@ fn main() -> io::Result<()> {
     let handle = thread::spawn(move || {
         thread::sleep(Duration::from_secs(3));
         println!("[后台线程] 写入唤醒信号...");
-        let _ = sender.write_all(&[b'W']);
+        let _ = sender.write_all(b"W");
     });
 
     // 5️⃣ 主线程等待事件

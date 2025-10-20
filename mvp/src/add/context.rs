@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::LazyLock};
 
-use super::super::strategy::*;
+use super::{base::AddStrategy, impls::*};
+
 pub struct AddStrategyFactory {
     handlers: HashMap<String, Box<dyn AddStrategy>>,
 }

@@ -1,4 +1,4 @@
-pub use tera::{Context, Tera};
+use tera::{Context, Tera};
 
 use crate::error::MvpError;
 

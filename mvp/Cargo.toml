@@ -12,3 +12,6 @@ chrono = "0.4"
 
 [build-dependencies]
 glob = "0.3"
+
+[dev-dependencies]
+tempfile = "3.6"  # 指定最新稳定版本即可

@@ -3,7 +3,7 @@ use std::{
     io::Write,
 };
 
-use super::prelude::*;
+use super::super::prelude::*;
 
 pub struct LicStrategy;
 

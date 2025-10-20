@@ -1,5 +1,5 @@
-use super::prelude::*;
-use crate::add::strategy::{
+use super::super::prelude::*;
+use crate::add::impls::{
     fmt_strategy::FmtStrategy, git_ignore_strategy, md_strategy::MdStrategy,
     vscode_strategy::VscodeStrategy,
 };

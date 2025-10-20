@@ -1,6 +1,6 @@
 use std::fs;
 
-use super::prelude::*;
+use super::super::prelude::*;
 
 pub struct MdStrategy;
 

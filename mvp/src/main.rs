@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::LazyLock};
 
 use chrono::Datelike;
 use clap::{Parser, Subcommand};
-use mvp::{add::*, error::MvpError};
+use mvp::{add::context::AddStrategyFactory, error::MvpError};
 use tera::{Context, Result as TeraResult, Tera, Value};
 
 // Custom filter: does nothing
@@ -56,15 +56,16 @@ fn fill_context_with_year_and_author(context: &mut Context) {
 }
 
 fn main() -> Result<(), MvpError> {
-    let mut context = Context::new();
-    fill_context_with_year_and_author(&mut context);
+    let cli = Cli::parse();
+    run(&cli)
+}
 
+fn run(cli: &Cli) -> Result<(), MvpError> {
     for name in TEMPLATES.get_template_names() {
         println!("Loaded template: {name}");
     }
-
-    let cli = Cli::parse();
-
+    let mut context = Context::new();
+    fill_context_with_year_and_author(&mut context);
     match &cli.command {
         Some(Commands::Add { name }) => {
             if let Some(handler) = AddStrategyFactory::get_add_strategy_factory().get(name) {
@@ -83,11 +84,60 @@ fn main() -> Result<(), MvpError> {
             }
         }
     }
+    // 这里可以根据解析到的命令行参数执行相应的逻辑
     Ok(())
 }
 
-#[test]
-fn verify_cli() {
-    use clap::CommandFactory;
-    Cli::command().debug_assert();
+#[cfg(test)]
+mod tests {
+
+    use std::time::Duration;
+
+    use tempfile::tempdir;
+
+    use super::*;
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        Cli::command().debug_assert();
+    }
+    // 如果 TEMPLATES 或全局资源在测试中会被修改，需要用 Mutex 或 LazyLock + reset
+    // 方法保证环境还原
+
+    #[test]
+    fn test_add_strategy_in_temp_dir() {
+        // 创建一个临时目录
+        let dir = tempdir().expect("Failed to create temp dir");
+        let temp_path = dir.path();
+
+        // 保存当前工作目录
+        let original_dir = std::env::current_dir().expect("Failed to get current dir");
+
+        // 切换到临时目录
+        std::env::set_current_dir(&temp_path).expect("Failed to change dir");
+
+        // 构造 CLI
+        let cli = Cli {
+            command: Some(Commands::Add {
+                name: "vscode".to_string(),
+            }),
+            values: None,
+        };
+
+        // 调用核心逻辑
+        let result = run(&cli);
+
+        // 验证执行成功
+        assert!(result.is_ok(), "Add strategy should succeed");
+
+        // 如果测试中会生成 `.vscode` 文件夹，可以在这里验证它存在
+        let vscode_path = temp_path.join(".vscode");
+        assert!(vscode_path.exists(), ".vscode folder should be created");
+
+        // 测试结束，临时目录会自动删除
+        drop(dir);
+
+        // 恢复工作目录
+        std::env::set_current_dir(&original_dir).expect("Failed to restore original dir");
+    }
 }
