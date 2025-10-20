@@ -10,7 +10,7 @@ use clap::{Parser, Subcommand};
     long_about = "This is a longer description of your CLI tool.\nIt can span multiple lines, and provides more details in the help output."
 )]
 struct Cli {
-    /// bool
+    /// bool 布尔开关
     #[arg(short, long)]
     bool: bool,
 
@@ -26,12 +26,12 @@ struct Cli {
     #[arg(short, long)]
     debug: u8,
 
-    /// port怎么没有读出来
+    // 没有 #[arg] 标记，因此它会被解析为位置参数，即必须直接在命令行中输入
     port: u16,
 
     /// Optional name to operate on
     name: Option<String>,
-
+    /// subcommand
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -94,4 +94,35 @@ fn main() {
 fn verify_cli() {
     use clap::CommandFactory;
     Cli::command().debug_assert(); // 关键：触发参数定义检查
+}
+
+#[test]
+fn test_full_cli_with_subcommand() {
+    let cli = Cli::parse_from([
+        "bin",
+        "-b",
+        "-c",
+        "./config.toml",
+        "--arg",
+        "hello",
+        "-d",
+        "3",
+        "8080",
+        "name",
+        "test",
+        "--list",
+    ]);
+
+    assert!(cli.bool);
+    assert_eq!(cli.config, Some(PathBuf::from("./config.toml")));
+    assert_eq!(cli.arg.as_deref(), Some("hello"));
+    assert_eq!(cli.debug, 3);
+    assert_eq!(cli.port, 8080);
+
+    assert_eq!(cli.name.as_deref(), Some("name"));
+
+    match cli.command {
+        Some(Commands::Test { list }) => assert!(list),
+        _ => panic!("Expected Commands::Test with list = true"),
+    }
 }
