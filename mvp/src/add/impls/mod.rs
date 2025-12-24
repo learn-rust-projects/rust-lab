@@ -1,3 +1,4 @@
+mod ci_strategy;
 mod fmt_strategy;
 mod git_ignore_strategy;
 mod init_strategy;
@@ -7,6 +8,7 @@ mod vscode_strategy;
 
 mod composite;
 
+pub use ci_strategy::CiStrategy;
 pub use fmt_strategy::FmtStrategy;
 pub use git_ignore_strategy::GitIgnoreStrategy;
 pub use init_strategy::InitStrategy;

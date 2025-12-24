@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use super::{composite::Composite, super::prelude::*};
+use super::{super::prelude::*, composite::Composite};
 
 pub struct InitStrategy;
 

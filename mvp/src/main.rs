@@ -15,15 +15,14 @@ include!("templates.rs");
 // Global template singleton
 pub static TEMPLATES: LazyLock<Tera> = LazyLock::new(|| {
     let mut tera = Tera::default();
-
+    tera.autoescape_on(vec![".html", ".sql"]);
+    // 可选配置
+    tera.register_filter("do_nothing", do_nothing_filter);
     // 循环注册 build.rs 生成的模板
     for (name, content) in TEMPLATE_MAP {
         tera.add_raw_template(name, content).unwrap();
     }
 
-    // 可选配置
-    tera.autoescape_on(vec![".html", ".sql"]);
-    tera.register_filter("do_nothing", do_nothing_filter);
     tera
 });
 

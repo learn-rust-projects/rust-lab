@@ -35,6 +35,7 @@ impl AddStrategyFactory {
             factory.register(Box::new(VscodeStrategy));
             factory.register(Box::new(FmtStrategy));
             factory.register(Box::new(GitIgnoreStrategy));
+            factory.register(Box::new(CiStrategy));
             factory
         });
         &FACTORY

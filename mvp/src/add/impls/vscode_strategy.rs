@@ -13,11 +13,11 @@ impl AddStrategy for VscodeStrategy {
 
         fs::create_dir_all(target_dir)?; // Ensure .vscode directory exists
 
-        let setting = tera.render("vscode/settings.json", context)?;
+        let setting = tera.render(".vscode/settings.json", context)?;
         fs::write(&target_file_settings, setting.as_bytes())?;
         println!("Created {}", target_file_settings);
 
-        let tasks = tera.render("vscode/tasks.json", context)?;
+        let tasks = tera.render(".vscode/tasks.json", context)?;
         fs::write(&target_file_tasks, tasks.as_bytes())?;
         println!("Created {}", target_file_tasks);
 

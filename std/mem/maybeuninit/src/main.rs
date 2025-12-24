@@ -1,4 +1,4 @@
-mod manuallyDrop;
+mod manually_drop;
 mod maybeuninit;
 mod union;
 fn main() {

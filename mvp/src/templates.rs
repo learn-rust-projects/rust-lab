@@ -1,3 +1,101 @@
+pub const _GITATTRIBUTES: &str = r#"*.rs text eol=lf
+*.toml text eol=lf
+*.md text eol=lf"#;
+pub const _GITHUB_WORKFLOWS_CI_YML: &str = r#"{% raw %}name: Rust CI
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust-toolchain: nightly
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            rust-toolchain: nightly
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            rust-toolchain: nightly
+            target: x86_64-apple-darwin
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install jq (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: ${{ matrix.rust-toolchain }}
+          components: rust-src, clippy, rustfmt
+          targets: ${{ matrix.target }}
+
+      - name: Check rust version
+        run: rustc --version --verbose
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
+      - name: Check code format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --target ${{ matrix.target }} --all-features -- -A clippy::new_without_default
+
+      - name: Build
+        run: cargo build --target ${{ matrix.target }} --all-features
+
+      - name: Run tests
+        run: cargo test --target ${{ matrix.target }} --all-features --verbose
+
+      - name: Run all binaries in workspace
+        if: runner.os == 'Linux'
+        run: |
+          set -e
+          cargo metadata --format-version 1 --no-deps > metadata.json
+          for manifest in $(jq -r '.packages[].manifest_path' metadata.json); do
+            pkg_dir=$(dirname "$manifest")
+            cd "$pkg_dir"
+            bin_names=$(grep -A 1 '^\[\[bin\]\]' Cargo.toml | grep '^name' | awk -F'=' '{print $2}' | tr -d '"' | tr -d ' ')
+            for bin in $bin_names; do
+              echo "Running [[bin]] $bin in $pkg_dir"
+              cargo run --bin "$bin" || exit 1
+            done
+            if [ -d "src/bin" ]; then
+              for binfile in src/bin/*.rs; do
+                [ -e "$binfile" ] || continue
+                bin=$(basename "${binfile%.rs}")
+                echo "Running src/bin/$bin.rs as $bin in $pkg_dir"
+                cargo run --bin "$bin" || exit 1
+              done
+            fi
+            cd - > /dev/null
+          done{% endraw %}
+"#;
 pub const _GITIGNORE: &str = r#"# ===============================
 # General .gitignore Template
 # ===============================
@@ -58,6 +156,81 @@ bin/
 # -------------------------------
 *.env
 *.local
+"#;
+pub const _VSCODE_SETTINGS_JSON: &str = r#"{
+    // -----------------------------
+    // Rust Analyzer Configuration
+    // -----------------------------
+    "rust-analyzer.cargo.features": "all", // Enable all features defined in Cargo.toml
+    "rust-analyzer.procMacro.enable": true, // Enable procedural macro expansion
+    "rust-analyzer.cargo.autoreload": true, // Auto-reload Cargo project for accurate analysis
+    "rust-analyzer.checkOnSave": true, // Enable checking code on save
+    "rust-analyzer.check.command": "clippy", // Use Clippy for on-save checks
+    "rust-analyzer.diagnostics.enable": true, // Enable diagnostics
+    "rust-analyzer.diagnostics.disabled": [ // Disable specific diagnostics
+        "unresolved-proc-macro", // Ignore unresolved procedural macro warnings
+        "inactive-code" // Ignore inactive code warnings
+    ],
+    // -----------------------------
+    // Formatting and Save Settings
+    // -----------------------------
+    "editor.formatOnSave": true, // Automatically format code on save
+    "editor.defaultFormatter": "rust-lang.rust-analyzer", // Use Rust Analyzer as the default formatter
+    "files.autoSave": "onFocusChange", // Auto-save files when changing focus
+    // -----------------------------
+    // Inlay Hints (Display Type Information)
+    // -----------------------------
+    "editor.inlayHints.enabled": "on", // Enable inlay hints in the editor
+    "rust-analyzer.inlayHints.typeHints.enable": true, // Show type hints for variables
+    "rust-analyzer.inlayHints.parameterHints.enable": true, // Show function parameter hints
+    "rust-analyzer.inlayHints.chainingHints.enable": true, // Show intermediate types in method chains
+    // -----------------------------
+    // Optional: Enhanced Error Visibility
+    // -----------------------------
+    "errorLens.enabled": true, // Enable inline error/warning highlighting
+    "errorLens.fontSize": "12px", // Font size for error/warning messages
+    "errorLens.fontWeight": "bold", // Font weight
+    // -----------------------------
+    // Optional: Show TODO / FIXME Comments
+    // -----------------------------
+    "todo-tree.general.tags": [
+        "TODO",
+        "FIXME",
+        "BUG"
+    ],
+    "caseConverter.caseCycle": [
+        "original",
+        "const",
+        "pascal",
+        "snake",
+        "kebab"
+    ],
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    }
+}"#;
+pub const _VSCODE_TASKS_JSON: &str = r#"{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Clippy Fix Now",
+            "type": "shell",
+            "command": "cargo clippy --fix --allow-dirty",
+            "group": {
+                // VS Code internally binds "build tasks" to Ctrl+Shift+B.
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$rustc"],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}
 "#;
 pub const LICENSE_APACHE: &str = r#"Apache License
                            Version 2.0, January 2004
@@ -337,89 +510,16 @@ newline_style = "Unix"             # Use Unix line endings (\n)
 use_field_init_shorthand = true    # Use shorthand for struct initialization: X { a, b }
 use_try_shorthand = true           # Use `?` shorthand for error handling: do_something()? 
 "#;
-pub const VSCODE_SETTINGS_JSON: &str = r#"{
-    // -----------------------------
-    // Rust Analyzer Configuration
-    // -----------------------------
-    "rust-analyzer.cargo.features": "all", // Enable all features defined in Cargo.toml
-    "rust-analyzer.procMacro.enable": true, // Enable procedural macro expansion
-    "rust-analyzer.cargo.autoreload": true, // Auto-reload Cargo project for accurate analysis
-    "rust-analyzer.checkOnSave": true, // Enable checking code on save
-    "rust-analyzer.check.command": "clippy", // Use Clippy for on-save checks
-    "rust-analyzer.diagnostics.enable": true, // Enable diagnostics
-    "rust-analyzer.diagnostics.disabled": [ // Disable specific diagnostics
-        "unresolved-proc-macro", // Ignore unresolved procedural macro warnings
-        "inactive-code" // Ignore inactive code warnings
-    ],
-    // -----------------------------
-    // Formatting and Save Settings
-    // -----------------------------
-    "editor.formatOnSave": true, // Automatically format code on save
-    "editor.defaultFormatter": "rust-lang.rust-analyzer", // Use Rust Analyzer as the default formatter
-    "files.autoSave": "onFocusChange", // Auto-save files when changing focus
-    // -----------------------------
-    // Inlay Hints (Display Type Information)
-    // -----------------------------
-    "editor.inlayHints.enabled": "on", // Enable inlay hints in the editor
-    "rust-analyzer.inlayHints.typeHints.enable": true, // Show type hints for variables
-    "rust-analyzer.inlayHints.parameterHints.enable": true, // Show function parameter hints
-    "rust-analyzer.inlayHints.chainingHints.enable": true, // Show intermediate types in method chains
-    // -----------------------------
-    // Optional: Enhanced Error Visibility
-    // -----------------------------
-    "errorLens.enabled": true, // Enable inline error/warning highlighting
-    "errorLens.fontSize": "12px", // Font size for error/warning messages
-    "errorLens.fontWeight": "bold", // Font weight
-    // -----------------------------
-    // Optional: Show TODO / FIXME Comments
-    // -----------------------------
-    "todo-tree.general.tags": [
-        "TODO",
-        "FIXME",
-        "BUG"
-    ],
-    "caseConverter.caseCycle": [
-        "original",
-        "const",
-        "pascal",
-        "snake",
-        "kebab"
-    ],
-    "[jsonc]": {
-        "editor.defaultFormatter": "vscode.json-language-features"
-    }
-}"#;
-pub const VSCODE_TASKS_JSON: &str = r#"{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Clippy Fix Now",
-            "type": "shell",
-            "command": "cargo clippy --fix --allow-dirty",
-            "group": {
-                // VS Code internally binds "build tasks" to Ctrl+Shift+B.
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": ["$rustc"],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            }
-        }
-    ]
-}
-"#;
 
 pub static TEMPLATE_MAP: &[(&str, &str)] = &[
+    (".gitattributes", _GITATTRIBUTES),
+    (".github/workflows/ci.yml", _GITHUB_WORKFLOWS_CI_YML),
     (".gitignore", _GITIGNORE),
+    (".vscode/settings.json", _VSCODE_SETTINGS_JSON),
+    (".vscode/tasks.json", _VSCODE_TASKS_JSON),
     ("LICENSE-APACHE", LICENSE_APACHE),
     ("LICENSE-MIT", LICENSE_MIT),
     ("LICENSE.md", LICENSE_MD),
     ("README.md", README_MD),
     ("rustfmt.toml", RUSTFMT_TOML),
-    ("vscode/settings.json", VSCODE_SETTINGS_JSON),
-    ("vscode/tasks.json", VSCODE_TASKS_JSON),
 ];

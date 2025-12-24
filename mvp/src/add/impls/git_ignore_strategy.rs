@@ -10,9 +10,12 @@ impl AddStrategy for GitIgnoreStrategy {
         let content = tera.render(".gitignore", context)?;
         fs::write(".gitignore", content.as_bytes())?;
         println!("Created .gitignore");
+        let content = tera.render(".gitattributes", context)?;
+        fs::write(".gitattributes", content.as_bytes())?;
+        println!("Created .gitattributes");
         Ok(())
     }
     fn name(&self) -> &str {
-        "gi"
+        "git"
     }
 }

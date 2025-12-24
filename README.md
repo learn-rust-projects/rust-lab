@@ -11,10 +11,10 @@ Rust-Lab is an experimental repository for exploring Rust libraries and real-wor
 chmod +x install.sh
 
 # Install MVP globally
-./install.sh install
+make install
 
 # Uninstall MVP
-./install.sh uninstall
+make uninstall
 ```
 
 ## License
