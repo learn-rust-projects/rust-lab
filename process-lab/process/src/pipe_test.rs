@@ -208,7 +208,6 @@ mod tests {
             waitpid(grep_pid, &mut grep_status, 0);
             waitpid(echo_pid, &mut echo_status, 0);
         }
-
         println!("\n子进程状态:");
         println!("  grep进程 (PID: {}) 退出状态: {}", grep_pid, grep_status);
         println!("  echo进程 (PID: {}) 退出状态: {}", echo_pid, echo_status);
@@ -627,6 +626,296 @@ mod tests {
             println!("\n❌ execvp测试失败: grep未找到匹配的模式 '12'");
         }
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_execl_style() -> io::Result<()> {
+        println!("=== 测试: Command模拟execl风格 ===\n");
+        println!("特点: 固定参数，完整路径，类似于execl\n");
+
+        // 模拟execl风格：固定参数，完整路径
+        let output = Command::new("/bin/echo").arg("12313").output()?;
+
+        println!("命令执行状态: {}", output.status);
+        println!("输出: {}", String::from_utf8_lossy(&output.stdout));
+
+        // 验证结果
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        if output_str.trim() == "12313" {
+            println!("✅ execl风格测试成功");
+        } else {
+            println!("❌ execl风格测试失败");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_execv_style() -> io::Result<()> {
+        println!("=== 测试: Command模拟execv风格 ===\n");
+        println!("特点: 动态参数数组，完整路径，类似于execv\n");
+
+        // 模拟execv风格：动态参数数组
+        let args = vec!["-l", "/tmp"];
+        let output = Command::new("/bin/ls").args(&args).output()?;
+
+        println!("命令执行状态: {}", output.status);
+        println!(
+            "输出行数: {}",
+            String::from_utf8_lossy(&output.stdout).lines().count()
+        );
+
+        // 验证结果
+        if output.status.success() {
+            println!("✅ execv风格测试成功");
+        } else {
+            println!("❌ execv风格测试失败");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_execlp_style() -> io::Result<()> {
+        println!("=== 测试: Command模拟execlp风格 ===\n");
+        println!("特点: 固定参数，PATH搜索，类似于execlp\n");
+
+        // 模拟execlp风格：PATH搜索，固定参数
+        let output = Command::new("echo").arg("Hello from Command!").output()?;
+
+        println!("命令执行状态: {}", output.status);
+        println!("输出: {}", String::from_utf8_lossy(&output.stdout));
+
+        // 验证结果
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let trimmed_output = output_str.trim();
+        if trimmed_output == "Hello from Command!" {
+            println!("✅ execlp风格测试成功");
+        } else {
+            println!("❌ execlp风格测试失败");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_execvp_style() -> io::Result<()> {
+        println!("=== 测试: Command模拟execvp风格 ===\n");
+        println!("特点: 动态参数数组，PATH搜索，类似于execvp\n");
+
+        // 模拟execvp风格：PATH搜索，动态参数数组
+        let args = vec!["hello", "/etc/passwd"];
+        let output = Command::new("grep").args(&args).output()?;
+
+        println!("命令执行状态: {}", output.status);
+
+        // grep在/etc/passwd中找不到"hello"时返回1，这是正常行为
+        if output.status.code() == Some(0) || output.status.code() == Some(1) {
+            println!("✅ execvp风格测试成功");
+            println!(
+                "   退出状态 {} 是预期的（0=找到匹配，1=未找到）",
+                output.status.code().unwrap()
+            );
+        } else {
+            println!("❌ execvp风格测试失败，状态: {:?}", output.status.code());
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_pipe_echo_grep() -> io::Result<()> {
+        println!("=== 测试: 使用Command实现 echo 12313 | grep 12 ===\n");
+
+        // 使用Command的管道功能实现 echo 12313 | grep 12
+        let echo_output = Command::new("echo")
+            .arg("12313")
+            .stdout(std::process::Stdio::piped())
+            .spawn()?
+            .stdout
+            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "无法获取echo输出"))?;
+
+        let grep_output = Command::new("grep").arg("12").stdin(echo_output).output()?;
+
+        println!("grep命令执行状态: {}", grep_output.status);
+        println!("grep输出: {}", String::from_utf8_lossy(&grep_output.stdout));
+
+        // 验证结果
+        if grep_output.status.success() {
+            println!("✅ Command管道测试成功: grep找到了匹配的模式 '12'");
+        } else {
+            println!("❌ Command管道测试失败: grep未找到匹配的模式 '12'");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_advanced_pipe() -> io::Result<()> {
+        println!("=== 测试: 使用Command实现复杂管道 ===\n");
+
+        // 实现更复杂的管道：echo "hello world" | grep "hello" | wc -l
+        let echo_process = Command::new("echo")
+            .arg("hello world")
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let grep_process = Command::new("grep")
+            .arg("hello")
+            .stdin(echo_process.stdout.unwrap())
+            .stdout(std::process::Stdio::piped())
+            .spawn()?;
+
+        let wc_output = Command::new("wc")
+            .arg("-l")
+            .stdin(grep_process.stdout.unwrap())
+            .output()?;
+
+        println!("wc命令执行状态: {}", wc_output.status);
+        println!(
+            "行数统计结果: {}",
+            String::from_utf8_lossy(&wc_output.stdout).trim()
+        );
+
+        // 验证结果
+        let line_count: i32 = String::from_utf8_lossy(&wc_output.stdout)
+            .trim()
+            .parse()
+            .unwrap_or(-1);
+        if line_count == 1 {
+            println!("✅ 复杂管道测试成功: 正确统计了1行");
+        } else {
+            println!("❌ 复杂管道测试失败: 期望1行，实际{}行", line_count);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_env_variables() -> io::Result<()> {
+        println!("=== 测试: Command环境变量设置 ===\n");
+
+        // 设置环境变量并执行命令
+        let output = Command::new("env")
+            .env("CUSTOM_VAR", "test_value")
+            .output()?;
+
+        let env_output = String::from_utf8_lossy(&output.stdout);
+        println!("环境变量输出:");
+        for line in env_output.lines() {
+            if line.contains("CUSTOM_VAR") {
+                println!("  {}", line);
+            }
+        }
+
+        // 验证环境变量设置
+        if env_output.contains("CUSTOM_VAR=test_value") {
+            println!("✅ 环境变量测试成功");
+        } else {
+            println!("❌ 环境变量测试失败");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_working_directory() -> io::Result<()> {
+        println!("=== 测试: Command工作目录设置 ===\n");
+
+        // 设置工作目录并执行命令
+        let temp_dir = std::env::temp_dir();
+        let output = Command::new("pwd").current_dir(&temp_dir).output()?;
+
+        let pwd_output = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let expected_path = temp_dir.to_string_lossy().to_string();
+
+        println!("当前工作目录: {}", pwd_output);
+        println!("期望工作目录: {}", expected_path);
+
+        // 验证工作目录设置
+        if pwd_output == expected_path {
+            println!("✅ 工作目录测试成功");
+        } else {
+            println!("❌ 工作目录测试失败");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_stdin_stdout_stderr() -> io::Result<()> {
+        println!("=== 测试: Command标准输入输出重定向 ===\n");
+
+        // 测试标准输入输出重定向
+        let mut child = Command::new("cat")
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()?;
+
+        // 写入数据到子进程的标准输入
+        if let Some(mut stdin) = child.stdin.take() {
+            stdin.write_all(b"hello from stdin\n")?;
+        }
+
+        // 读取子进程的标准输出
+        let output = child.wait_with_output()?;
+
+        println!("子进程退出状态: {}", output.status);
+        println!(
+            "标准输出: {}",
+            String::from_utf8_lossy(&output.stdout).trim()
+        );
+        println!(
+            "标准错误: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+
+        // 验证输出
+        let stdout_str = String::from_utf8_lossy(&output.stdout);
+        let trimmed_stdout = stdout_str.trim();
+        if trimmed_stdout == "hello from stdin" {
+            println!("✅ 标准输入输出测试成功");
+        } else {
+            println!("❌ 标准输入输出测试失败");
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_command_family_comparison() -> io::Result<()> {
+        println!("=== 综合测试: Command模拟exec函数家族 ===\n");
+
+        println!("1. 测试execl风格:");
+        test_command_execl_style().unwrap();
+
+        println!("\n2. 测试execv风格:");
+        test_command_execv_style().unwrap();
+
+        println!("\n3. 测试execlp风格:");
+        test_command_execlp_style().unwrap();
+
+        println!("\n4. 测试execvp风格:");
+        test_command_execvp_style().unwrap();
+
+        println!("\n5. 测试管道功能:");
+        test_command_pipe_echo_grep().unwrap();
+
+        println!("\n6. 测试复杂管道:");
+        test_command_advanced_pipe().unwrap();
+
+        println!("\n7. 测试环境变量:");
+        test_command_env_variables().unwrap();
+
+        println!("\n8. 测试工作目录:");
+        test_command_working_directory().unwrap();
+
+        println!("\n9. 测试标准输入输出:");
+        test_command_stdin_stdout_stderr().unwrap();
+
+        println!("\n=== Command模拟exec函数家族测试完成 ===");
         Ok(())
     }
 
