@@ -9,6 +9,7 @@ use rustyline::{
     hint::Hinter,
     validate::{ValidationContext, ValidationResult, Validator},
 };
+static COUNTER: AtomicUsize = AtomicUsize::new(0);
 struct MyCompleter {
     commands: Vec<String>,
 }
@@ -67,8 +68,9 @@ fn main() -> Result<(), ReadlineError> {
     let completer = MyCompleter { commands };
     let mut rl = Editor::new()?;
     rl.set_completion_type(rustyline::CompletionType::List);
+    rl.set_auto_add_history(true);
     rl.set_helper(Some(completer));
-
+    // rl.load_history("../history.txt")?;
     loop {
         let readline = rl.readline(">> ");
         match readline {
@@ -82,6 +84,12 @@ fn main() -> Result<(), ReadlineError> {
                     }
                     "help" => {
                         println!("Commands: exit, help, list, show, delete");
+                    }
+                    "history" => {
+                        println!("History: {:?}", rl.history().iter().collect::<Vec<_>>());
+                    }
+                    "history1" => {
+                        println!("History: {:?}", rl.history().iter().collect::<Vec<_>>());
                     }
                     cmd => {
                         println!("You typed: {}", cmd);
