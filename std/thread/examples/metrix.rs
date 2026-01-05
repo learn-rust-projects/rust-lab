@@ -5,6 +5,7 @@ const N_WORKERS: usize = 4;
 const M_WORKERS: usize = 4;
 fn main() -> Result<()> {
     let metric = Metric::new();
+    println!("{}", metric);
     for idx in 0..N_WORKERS {
         task_worker(idx, metric.clone())?;
     }
