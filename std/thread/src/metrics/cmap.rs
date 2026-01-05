@@ -6,15 +6,15 @@ use std::sync::Arc;
 use anyhow::Result;
 use dashmap::DashMap;
 #[derive(Debug, Clone)]
-pub struct Metric {
+pub struct CmapMetric {
     data: Arc<DashMap<String, i64>>,
 }
-impl Default for Metric {
+impl Default for CmapMetric {
     fn default() -> Self {
         Self::new()
     }
 }
-impl Metric {
+impl CmapMetric {
     pub fn new() -> Self {
         Self {
             data: Arc::new(DashMap::new()),
@@ -36,7 +36,7 @@ impl Metric {
         Ok(())
     }
 }
-impl fmt::Display for Metric {
+impl fmt::Display for CmapMetric {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for entry in self.data.iter() {
             writeln!(f, "{}: {}", entry.key(), entry.value())?;

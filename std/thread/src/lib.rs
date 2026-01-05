@@ -1,7 +1,7 @@
 mod martix;
-mod metric;
+mod metrics;
 mod vector;
 
 pub use martix::{Matrix, multiply};
-pub use metric::Metric;
+pub use metrics::{AmapMetrics, CmapMetric};
 pub use vector::{Vector, dot_product};
