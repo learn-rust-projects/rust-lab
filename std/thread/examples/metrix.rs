@@ -13,7 +13,7 @@ fn main() -> Result<()> {
     }
     loop {
         std::thread::sleep(std::time::Duration::from_millis(5000));
-        println!("{:#?}", metric.snapshot());
+        println!("{}", metric);
     }
 }
 
