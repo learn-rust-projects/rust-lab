@@ -1,4 +1,7 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 use rustyline::{
     Context, Editor, Helper,

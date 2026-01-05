@@ -1,7 +1,8 @@
 [package]
-name = "iter-menthod"
+name = "thread"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-toml = "0.9.10"
+anyhow = "1.0"
+rand = "0.9.2"
