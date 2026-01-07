@@ -38,7 +38,6 @@ fn validate_data(data: &str) -> Result<(), InvalidDataError> {
     if data.is_empty() {
         return Err(InvalidDataError("Data cannot be empty".into()));
     }
-
     Ok(())
 }
 
