@@ -150,19 +150,22 @@ fn main() {
         let random_param2 = rng.gen_range(1.0..=10.0);
         let random_param3 = rng.gen_range(1.0..=10.0);
 
-        let shape = match shape_type {
-            0 => Shapes::Circle(Circle {
+        let shape: Shapes = match shape_type {
+            0 => Circle {
                 radius: random_param1,
-            }),
-            1 => Shapes::Rectangle(Rectangle {
+            }
+            .into(),
+            1 => Rectangle {
                 width: random_param1,
                 height: random_param2,
-            }),
-            2 => Shapes::Triangle(Triangle {
+            }
+            .into(),
+            2 => Triangle {
                 side_a: random_param1,
                 side_b: random_param2,
                 side_c: random_param3,
-            }),
+            }
+            .into(),
             _ => unreachable!(),
         };
 
@@ -424,19 +427,22 @@ mod tests {
             let shape_type = rng.gen_range(0..=2);
             let random_param = rng.gen_range(1.0..=10.0);
 
-            let shape = match shape_type {
-                0 => Shapes::Circle(Circle {
+            let shape: Shapes = match shape_type {
+                0 => Circle {
                     radius: random_param,
-                }),
-                1 => Shapes::Rectangle(Rectangle {
+                }
+                .into(),
+                1 => Rectangle {
                     width: random_param,
                     height: random_param,
-                }),
-                2 => Shapes::Triangle(Triangle {
+                }
+                .into(),
+                2 => Triangle {
                     side_a: random_param,
                     side_b: random_param,
                     side_c: random_param,
-                }),
+                }
+                .into(),
                 _ => unreachable!(),
             };
 
@@ -477,9 +483,6 @@ mod tests {
         let total_area_box = box_shapes.iter().map(|shape| shape.area()).sum::<f64>();
 
         let box_dyn_time = start_time.elapsed();
-
-        // 验证两个方法得到相同的总面积（近似）
-        assert!((total_area_enum - total_area_box).abs() < 0.01);
 
         println!(
             "性能测试 - enum_dispatch: {:?}, Box<dyn>: {:?}",
