@@ -1,6 +1,6 @@
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumMessage, EnumString, IntoEnumIterator};
 
-/// 颜色枚举 - 展示strum的基本功能
+/// 颜色枚举 - 展示strum的各种功能
 #[derive(
     Debug, Clone, Copy, PartialEq, Display, EnumString, EnumIter, EnumCount, EnumMessage, AsRefStr,
 )]
@@ -15,114 +15,91 @@ pub enum Color {
     Yellow,
 }
 
-/// 状态枚举 - 展示更多strum功能
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumString, EnumIter, EnumCount, AsRefStr)]
-pub enum Status {
-    // 最后一个serialize就是AsRefStr的实现
-    #[strum(serialize = "pending", serialize = "等待中", serialize = "等待中1")]
-    Pending,
-    #[strum(serialize = "processing", serialize = "处理中")]
-    Processing,
-    #[strum(serialize = "completed", serialize = "已完成")]
-    Completed,
-    #[strum(serialize = "failed", serialize = "失败")]
-    Failed,
-}
-
-/// 方向枚举 - 展示默认字符串转换
-#[derive(Debug, Clone, Copy, PartialEq, Display, EnumIter, EnumString)]
-#[strum(serialize_all = "lowercase")]
-pub enum Direction {
-    North,
-    South,
-    East,
-    West,
-}
-
 fn main() {
     println!("=== Strum库功能演示 ===\n");
 
-    // 1. Display trait 演示 - 转换为字符串
-    println!("1. Display trait 演示:");
+    // 1. Display trait - 对应 Display 宏
+    // to_string = "Red" 会影响Display的实现 也会影响EnumString的实现
+    println!("1. Display trait (对应 Display 宏):");
     let color = Color::Red;
     println!("   Color::Red 显示为: {}", color);
-    println!("   Color::Green 显示为: {}", Color::Green);
     println!();
 
-    // 2. EnumString trait 演示 - 从字符串解析
-    println!("2. EnumString trait 演示:");
-    match "红色".parse::<Color>() {
-        Ok(color) => println!("   解析'红色'成功: {:?}", color),
-        Err(e) => println!("   解析失败: {}", e),
-    }
-
+    // 2. EnumString trait - 对应 EnumString 宏
+    // EnumString 提供 FromStr实现
+    println!("2. EnumString trait (对应 EnumString 宏):");
+    // 默认实现
+    // 解析"绿色"失败，因为默认实现是基于to_string()的
     match "Green".parse::<Color>() {
-        Ok(color) => println!("   解析'Green'成功: {:?}", color),
+        Ok(parsed_color) => println!("   解析'绿色'成功: {:?}", parsed_color),
+        Err(e) => println!("   解析失败: {}", e),
+    }
+    // serialize = "绿色"
+    match "绿色".parse::<Color>() {
+        Ok(parsed_color) => println!("   解析'绿色'成功: {:?}", parsed_color),
         Err(e) => println!("   解析失败: {}", e),
     }
     println!();
 
-    // 3. EnumIter trait 演示 - 迭代枚举值
-    println!("3. EnumIter trait 演示:");
-    println!("   所有颜色:");
+    // 3. EnumIter trait - 对应 EnumIter 宏
+    println!("3. EnumIter trait (对应 EnumIter 宏):");
+    println!("   遍历所有颜色:");
     for color in Color::iter() {
         println!("     - {}", color);
     }
     println!();
 
-    // 4. EnumCount trait 演示 - 获取枚举变体数量
-    println!("4. EnumCount trait 演示:");
-    println!("   颜色变体数量: {}", Color::COUNT);
-    println!("   状态变体数量: {}", Status::COUNT);
+    // 4. EnumCount trait - 对应 EnumCount 宏
+    println!("4. EnumCount trait (对应 EnumCount 宏):");
+    println!("   颜色总数: {}", Color::COUNT);
     println!();
 
-    // 5. EnumMessage trait 演示 - 获取消息
-    println!("5. EnumMessage trait 演示:");
+    // 5. EnumMessage trait - 对应 EnumMessage 宏
+    println!("5. EnumMessage trait (对应 EnumMessage 宏):");
     if let Some(message) = Color::Red.get_message() {
         println!("   Color::Red 的消息: {}", message);
     }
-    if let Some(message) = Color::Green.get_message() {
-        println!("   Color::Green 的消息: {}", message);
-    }
     println!();
 
-    // 6. 方向枚举演示
-    println!("6. 方向枚举演示:");
-    for direction in Direction::iter() {
-        println!("   {} -> {}", direction, direction);
-    }
+    // 6. AsRefStr trait - 对应 AsRefStr 宏
+    println!("6. AsRefStr trait (对应 AsRefStr 宏):");
+    let color = Color::Blue;
+    println!("   Color::Blue 作为引用字符串: {}", color.as_ref());
     println!();
 
-    // 7. 状态枚举演示
-    println!("7. 状态枚举演示:");
-    let statuses = ["等待中", "处理中", "已完成", "failed"];
-    for status_str in statuses {
-        match status_str.parse::<Status>() {
-            Ok(status) => println!("   解析'{}'成功: {:?}", status_str, status),
-            Err(_) => println!("   无法解析'{}'", status_str),
+    // 7. 综合演示 - 展示所有trait协同工作
+    println!("7. 综合演示 - 所有trait协同工作:");
+    println!("   遍历所有颜色并展示所有属性:");
+    for color in Color::iter() {
+        println!("     - 颜色: {}", color);
+        println!("       引用字符串: {}", color.as_ref());
+        if let Some(msg) = color.get_message() {
+            println!("       消息: {}", msg);
         }
+        println!("       重新解析: {:?}", color.to_string().parse::<Color>());
     }
     println!();
 
-    // 8. 实用功能演示
-    println!("8. 实用功能演示:");
-    println!("   所有状态值:");
-    for status in Status::iter() {
-        println!("     - {} (显示为: {})", status, status);
-    }
-
-    // 9. 错误处理演示
-    println!("\n9. 错误处理演示:");
+    // 8. 错误处理演示 - EnumString的错误处理
+    println!("8. 错误处理演示 (对应 EnumString 宏):");
     match "无效颜色".parse::<Color>() {
-        Ok(color) => println!("   解析成功: {:?}", color),
-        Err(e) => println!("   解析'无效颜色'失败: {}", e),
+        Ok(c) => println!("   解析成功: {:?}", c),
+        Err(e) => println!("   解析失败: {}", e),
     }
-    // 10. 方向枚举解析
-    println!("10. 方向枚举解析:");
-    match "north".parse::<Direction>() {
-        Ok(direction) => println!("   解析'north'成功: {:?}", direction),
-        Err(e) => println!("   解析'north'失败: {}", e),
-    }
+    println!();
+
+    // 9. 比较操作 - 展示衍生的trait
+    println!("9. 比较操作 (对应 Debug, Clone, Copy, PartialEq 宏):");
+    let red1 = Color::Red;
+    let red2 = Color::Red;
+    let blue = Color::Blue;
+
+    println!("   Color::Red == Color::Red: {}", red1 == red2);
+    println!("   Color::Red == Color::Blue: {}", red1 == blue);
+    println!("   Debug输出: {:?}", red1);
+    println!();
+
+    println!("=== 所有功能演示完成 ===");
 }
 
 #[cfg(test)]
@@ -131,10 +108,10 @@ mod tests {
 
     #[test]
     fn test_color_display() {
-        assert_eq!(Color::Red.to_string(), "红色");
-        assert_eq!(Color::Green.to_string(), "绿色");
-        assert_eq!(Color::Blue.to_string(), "蓝色");
-        assert_eq!(Color::Yellow.to_string(), "黄色");
+        assert_eq!(Color::Red.to_string(), "Red");
+        assert_eq!(Color::Green.to_string(), "Green");
+        assert_eq!(Color::Blue.to_string(), "Blue");
+        assert_eq!(Color::Yellow.to_string(), "Yellow");
     }
 
     #[test]
@@ -173,56 +150,20 @@ mod tests {
     }
 
     #[test]
-    fn test_status_display() {
-        assert_eq!(Status::Pending.to_string(), "pending");
-        assert_eq!(Status::Processing.to_string(), "processing");
-        assert_eq!(Status::Completed.to_string(), "completed");
-        assert_eq!(Status::Failed.to_string(), "failed");
-    }
-
-    #[test]
-    fn test_status_from_string() {
-        assert_eq!("等待中".parse::<Status>().unwrap(), Status::Pending);
-        assert_eq!("处理中".parse::<Status>().unwrap(), Status::Processing);
-        assert_eq!("已完成".parse::<Status>().unwrap(), Status::Completed);
-        assert_eq!("失败".parse::<Status>().unwrap(), Status::Failed);
-
-        // 测试英文别名
-        assert_eq!("pending".parse::<Status>().unwrap(), Status::Pending);
-        assert_eq!("completed".parse::<Status>().unwrap(), Status::Completed);
-    }
-
-    #[test]
-    fn test_direction_display() {
-        assert_eq!(Direction::North.to_string(), "North");
-        assert_eq!(Direction::South.to_string(), "South");
-        assert_eq!(Direction::East.to_string(), "East");
-        assert_eq!(Direction::West.to_string(), "West");
-    }
-
-    #[test]
-    fn test_direction_iteration() {
-        let directions: Vec<Direction> = Direction::iter().collect();
-        assert_eq!(directions.len(), 4);
-        assert!(directions.contains(&Direction::North));
-        assert!(directions.contains(&Direction::South));
-        assert!(directions.contains(&Direction::East));
-        assert!(directions.contains(&Direction::West));
+    fn test_status_as_ref_str() {
+        let color = Color::Red;
+        assert_eq!(color.as_ref(), "Red");
     }
 
     #[test]
     fn test_invalid_parsing() {
         assert!("无效值".parse::<Color>().is_err());
-        assert!("unknown".parse::<Status>().is_err());
     }
 
     #[test]
     fn test_enum_equality() {
         assert_eq!(Color::Red, Color::Red);
         assert_ne!(Color::Red, Color::Green);
-
-        assert_eq!(Status::Pending, Status::Pending);
-        assert_ne!(Status::Pending, Status::Completed);
     }
 
     #[test]
@@ -231,10 +172,10 @@ mod tests {
         let color = Color::Blue;
 
         // 测试Display
-        assert_eq!(color.to_string(), "蓝色");
+        assert_eq!(color.to_string(), "Blue");
 
         // 测试从字符串解析
-        let parsed_color = "蓝色".parse::<Color>().unwrap();
+        let parsed_color = "Blue".parse::<Color>().unwrap();
         assert_eq!(color, parsed_color);
 
         // 测试消息
@@ -243,11 +184,8 @@ mod tests {
         // 测试迭代包含
         let colors: Vec<Color> = Color::iter().collect();
         assert!(colors.contains(&color));
-    }
-    #[test]
-    fn test_status_as_ref_str() {
-        // 测试AsRefStr
-        let status = Status::Pending;
-        assert_eq!(status.as_ref(), "pending");
+
+        // 测试引用字符串
+        assert_eq!(color.as_ref(), "Blue");
     }
 }
