@@ -9,7 +9,7 @@ members = [
     "enum/strum-lab",
     "error-lab/this_error_demo",
     "error-lab/unified_error",
-    "high-performance-lab/false-sharing",
+    "high-performance-lab/false-sharing", "high-performance-lab/memchr",
     "log-lab/traceing-lab",
     "mvp",
     "process-lab/process",
