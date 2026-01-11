@@ -10,7 +10,7 @@ members = [
     "error-lab/this_error_demo",
     "error-lab/unified_error",
     "high-performance-lab/false-sharing", "high-performance-lab/memchr",
-    "log-lab/traceing-lab",
+    "log-lab/traceing-lab", 
     "mvp",
     "process-lab/process",
     "process-lab/self-pipe-trick",
@@ -25,4 +25,5 @@ members = [
     "trie-lab/radix-trie-lab",
     "unsafecell-lab/unsafecell-lab",
     "volatile-lab",
+    "map-lab/dummy_map",
 ]
