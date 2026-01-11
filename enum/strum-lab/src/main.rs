@@ -4,10 +4,23 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumMessage, EnumString, Int
 #[derive(
     Debug, Clone, Copy, PartialEq, Display, EnumString, EnumIter, EnumCount, EnumMessage, AsRefStr,
 )]
+#[strum(serialize_all = "lowercase")]
+/// 【Strum serialize_all 风格转换对照表】
+///
+/// | 配置值 (strum value) | 原始变体名 (Enum Variant) | 输出示例 (Output) | 说明 (Description) |
+/// |:-------------------|:-----------------------|:-----------------|:------------------|
+/// | "lowercase"        | BlueLight              | bluelight        | 全部小写，不保留分隔 |
+/// | "UPPERCASE"        | BlueLight              | BLUELIGHT        | 全部大写，不保留分隔 |
+/// | "snake_case"       | BlueLight              | blue_light       | 蛇形命名，以下划线分隔 |
+/// | "kebab-case"       | BlueLight              | blue-light       | 短横线命名，常用于 URL |
+/// | "camelCase"        | Blue_Light             | blueLight        | 小驼峰命名，首字母小写 |
+/// | "PascalCase"       | blue_light             | BlueLight        | 大驼峰命名，首字母大写 |
+/// | "SCREAMING_SNAKE_CASE" | BlueLight          | BLUE_LIGHT       | 常用于常量或环境变量定义 |
+/// | "shouty-kebab-case"| BlueLight              | BLUE-LIGHT       | 全大写短横线命名 |
 pub enum Color {
-    #[strum(serialize = "红色", to_string = "Red", message = "热情的颜色")]
+    #[strum(serialize = "红色2", serialize = "红色1", message = "热情的颜色")]
     Red,
-    #[strum(serialize = "绿色", to_string = "Green", message = "自然的颜色")]
+    #[strum(serialize = "绿色", message = "自然的颜色")]
     Green,
     #[strum(serialize = "蓝色", to_string = "Blue", message = "冷静的颜色")]
     Blue,
@@ -20,6 +33,12 @@ fn main() {
 
     // 1. Display trait - 对应 Display 宏
     // to_string = "Red" 会影响Display的实现 也会影响EnumString的实现
+    // 序列化优先级（决定转成什么字符串）
+    // (1) 显式指定 (to_string)： 如果你写了 #[strum(to_string =
+    // "Red")]，就用这个值。 (2) 如果定义了多个
+    // serialize：选择最后面的一个来序列化， 同时字段上的优先级比全局高
+    // (3) 默认名称： 如果没写属性，直接用代码里定义的成员名（如 Red 变 "Red"）。
+    // 建议:使用全局宏来统一序列化风格#[strum(serialize_all = "lowercase")]
     println!("1. Display trait (对应 Display 宏):");
     let color = Color::Red;
     println!("   Color::Red 显示为: {}", color);
@@ -28,10 +47,12 @@ fn main() {
     // 2. EnumString trait - 对应 EnumString 宏
     // EnumString 提供 FromStr实现
     println!("2. EnumString trait (对应 EnumString 宏):");
-    // 默认实现
+
+    // 默认实现就是"Green",提供了serialize = "绿色"之后，默认实现失效
+    // 但凡有serialize = "绿色"的或to_string = "绿色"的一个，都不能用"Green"解析
     // 解析"绿色"失败，因为默认实现是基于to_string()的
     match "Green".parse::<Color>() {
-        Ok(parsed_color) => println!("   解析'绿色'成功: {:?}", parsed_color),
+        Ok(parsed_color) => println!("   解析'Green'成功: {:?}", parsed_color),
         Err(e) => println!("   解析失败: {}", e),
     }
     // serialize = "绿色"
