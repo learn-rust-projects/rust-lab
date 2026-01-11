@@ -1,8 +1,21 @@
-use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumMessage, EnumString, IntoEnumIterator};
+use strum::{
+    AsRefStr, Display, EnumCount, EnumIter, EnumMessage, EnumString, IntoEnumIterator,
+    IntoStaticStr,
+};
 
 /// 颜色枚举 - 展示strum的各种功能
 #[derive(
-    Debug, Clone, Copy, PartialEq, Display, EnumString, EnumIter, EnumCount, EnumMessage, AsRefStr,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Display,
+    EnumString,
+    EnumIter,
+    EnumCount,
+    EnumMessage,
+    AsRefStr,
+    IntoStaticStr,
 )]
 #[strum(serialize_all = "lowercase")]
 /// 【Strum serialize_all 风格转换对照表】
@@ -118,6 +131,14 @@ fn main() {
     println!("   Color::Red == Color::Red: {}", red1 == red2);
     println!("   Color::Red == Color::Blue: {}", red1 == blue);
     println!("   Debug输出: {:?}", red1);
+    println!();
+    // 10 . IntoStaticStr trait - 对应 IntoStaticStr 宏
+    println!("10. IntoStaticStr trait (对应 IntoStaticStr 宏):");
+    let color = Color::Red;
+    println!(
+        "   Color::Red 作为静态字符串: {}",
+        Into::<&'static str>::into(color)
+    );
     println!();
 
     println!("=== 所有功能演示完成 ===");
