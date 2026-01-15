@@ -98,6 +98,7 @@ fn verify_cli() {
 
 #[test]
 fn test_full_cli_with_subcommand() {
+    // 顺序
     let cli = Cli::parse_from([
         "bin",
         "-b",
@@ -107,8 +108,11 @@ fn test_full_cli_with_subcommand() {
         "hello",
         "-d",
         "3",
+        // 位置参数
         "8080",
+        // 可选位置参数
         "name",
+        // 子命令
         "test",
         "--list",
     ]);
