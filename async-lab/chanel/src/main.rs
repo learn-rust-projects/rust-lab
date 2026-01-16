@@ -10,7 +10,7 @@ fn test_basic_mpsc() {
     let (tx, rx) = mpsc::channel();
     let x = "1230";
     // 发送消息s
-    tx.send(&x).unwrap();
+    tx.send(x).unwrap();
 
     // 接收消息
     let received = rx.recv().unwrap();

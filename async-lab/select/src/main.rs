@@ -808,8 +808,8 @@ mod tests {
         }
 
         let mut futures = FuturesUnordered::new();
-        futures.push(quick_task());
-        futures.push(slow_task());
+        futures.push(quick_task().boxed());
+        futures.push(slow_task().boxed());
 
         let mut results = Vec::new();
         while let Some(result) = futures.next().await {
@@ -833,8 +833,8 @@ mod tests {
         }
 
         let mut futures = FuturesUnordered::new();
-        futures.push(success_task());
-        futures.push(error_task());
+        futures.push(success_task().boxed());
+        futures.push(error_task().boxed());
 
         let mut success_count = 0;
         let mut error_count = 0;
