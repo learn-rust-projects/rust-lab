@@ -1891,6 +1891,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2ae44ef20feb57a68b23d846850f861394c2e02dc425a50098ae8c90267589"
 
 [[package]]
+name = "slice"
+version = "0.1.0"
+
+[[package]]
 name = "slug"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2170,6 +2174,7 @@ dependencies = [
 name = "tokio-lab"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bytes",
  "tokio",
 ]
@@ -2460,6 +2465,10 @@ name = "value-bag"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ba6f5989077681266825251a52748b8c1d8a4ad098cc37e440103d0ea717fc0"
+
+[[package]]
+name = "vec"
+version = "0.1.0"
 
 [[package]]
 name = "version_check"

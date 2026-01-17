@@ -1,5 +1,19 @@
 use bytes::{Buf, BufMut, Bytes, BytesMut};
-
+/// ```text
+/// 
+///    Arc ptrs                   ┌─────────┐
+///    ________________________ / │ Bytes 2 │
+///   /                           └─────────┘
+///  /          ┌───────────┐     |         |
+/// |_________/ │  Bytes 1  │     |         |
+/// |           └───────────┘     |         |
+/// |           |           | ___/ data     | tail
+/// |      data |      tail |/              |
+/// v           v           v               v
+/// ┌─────┬─────┬───────────┬───────────────┬─────┐
+/// │ Arc │     │           │               │     │
+/// └─────┴─────┴───────────┴───────────────┴─────┘
+/// ```
 fn main() {
     println!("=== Bytes crate 常用方法测试 ===\n");
 
@@ -17,6 +31,9 @@ fn main() {
 
     // 测试5: 缓冲区操作
     test_buffer_operations();
+
+    // 测试6: 字节操作
+    test_bytes_operations();
 
     println!("\n=== 所有测试完成 ===");
 }
@@ -64,8 +81,15 @@ fn test_read_write() {
 
     // 读取操作 - 修复：直接从Bytes读取，而不是使用Reader
     let mut bytes_data = buf.freeze();
+    println!("原始数据: {:?}", std::str::from_utf8(&bytes_data).unwrap());
     let val1 = bytes_data.get_u8();
     let val2 = bytes_data.get_u16();
+    let b3 = bytes_data.slice(0..5);
+    println!("读取前5个字节: {:?}", std::str::from_utf8(&b3).unwrap());
+    println!(
+        "读取后剩余数据: {:?}",
+        std::str::from_utf8(&bytes_data).unwrap()
+    );
     println!("读取u8: {}, 读取u16: {}", val1, val2);
 }
 
@@ -122,10 +146,15 @@ fn test_buffer_operations() {
     // 使用put方法写入
     buf.put_u32(0xDEADBEEF);
     buf.extend_from_slice(&[1, 2, 3, 4, 5]);
-
+    println!("初始容量: {}, 初始长度: {}", buf.capacity(), buf.len());
+    let x = buf.split();
+    println!("split 初始容量: {}, 初始长度: {}", buf.capacity(), buf.len());
     println!("写入后的缓冲区: {:?}", buf);
 
     // 读取数据 - 修复：直接从Bytes读取
+       // 使用put方法写入
+    buf.put_u32(0xDEADBEEF);
+    buf.extend_from_slice(&[1, 2, 3, 4, 5]);
     let mut bytes_data = buf.freeze();
     let num = bytes_data.get_u32();
     println!("读取u32: 0x{:X}", num);
@@ -147,6 +176,31 @@ fn test_buffer_operations() {
     // 测试clear
     buf2.clear();
     println!("清空后长度: {}", buf2.len());
+}
+
+fn test_bytes_operations() {
+    let mut buf = BytesMut::with_capacity(1000);
+    buf.extend_from_slice(b"Hello, World!");
+    // 需要buf
+    buf.put(&b"Rust"[..]);
+    buf.put_i32(12313);
+    buf.put_u8(0x42);
+    println!("{:?}", buf);
+    let mut putted = buf.split();
+    println!("{:?}", putted);
+    let split_off = putted.split_off(putted.len() - 4);
+    println!("split_off:{:?}", split_off);
+    println!("{:?}", putted);
+    let split_to: BytesMut = putted.split_to(6);
+    println!("split_to:{:?}", split_to);
+    println!("{:?}", putted);
+    // 变成只读的数据
+    let mut bytes = putted.freeze();
+    println!("{:?}", bytes);
+    // 返回新bytes，切成更小的单元，但是每个单元数据仍然是不可变的
+    let split_to = bytes.split_to(7);
+    println!("{:?}", split_to);
+    println!("{:?}", bytes);
 }
 
 #[cfg(test)]

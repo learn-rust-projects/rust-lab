@@ -27,5 +27,5 @@ members = [
     "unsafecell-lab/unsafecell-lab",
     "volatile-lab",
     "map-lab/dummy_map",
-    "async-lab/custom_future", "async-lab/chanel", "async-lab/stream", "async-lab/join", "async-lab/select", "async-lab/spawn", "async-lab/send", "async-lab/recursion", "async-lab/web-server",
+    "async-lab/custom_future", "async-lab/chanel", "async-lab/stream", "async-lab/join", "async-lab/select", "async-lab/spawn", "async-lab/send", "async-lab/recursion", "async-lab/web-server", "alloc/vec", "core/slice",
 ]
