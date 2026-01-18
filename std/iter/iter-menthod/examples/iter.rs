@@ -84,6 +84,7 @@ fn test_filtering_methods() {
     // 10. filter_map() - 过滤并映射
     let filtered_map: Vec<_> = numbers
         .iter()
+        // 过滤内容保留some里面的内容
         .filter_map(|&x| if x % 3 == 0 { Some(x * 2) } else { None })
         .collect();
     println!("10. filter_map(3的倍数×2): {:?}", filtered_map);
@@ -93,6 +94,7 @@ fn test_filtering_methods() {
     println!("11. take(3): {:?}", first_three);
 
     // 12. take_while() - 条件取前
+    // 返回满足条件的元素，一旦返回false，后续元素就会被忽略
     let take_while: Vec<_> = numbers.iter().take_while(|&&x| x < 5).collect();
     println!("12. take_while(<5): {:?}", take_while);
 
@@ -100,27 +102,33 @@ fn test_filtering_methods() {
     let skip_three: Vec<_> = numbers.iter().skip(3).collect();
     println!("13. skip(3): {:?}", skip_three);
 
-    // 14. skip_while() - 条件跳过
+    // 14. skip_while() - 条件跳过前n个
+    // 返回满足条件的元素，一旦返回false，后续元素就会被保留
     let skip_while: Vec<_> = numbers.iter().skip_while(|&&x| x < 5).collect();
     println!("14. skip_while(<5): {:?}", skip_while);
 
     // 15. find() - 查找第一个匹配项
+    // 返回第一个满足条件的元素，否则返回None
     let found = numbers.iter().find(|&&x| x > 7);
     println!("15. find(>7): {:?}", found);
 
     // 16. position() - 查找位置
+    // 返回第一个满足条件的元素的索引，否则返回None
     let pos = numbers.iter().position(|&x| x == 5);
     println!("16. position(==5): {:?}", pos);
 
     // 17. rposition() - 反向查找位置
+    // 返回从后往前第一个满足条件的元素的索引，否则返回None
     let rpos = numbers.iter().rposition(|&x| x == 5);
     println!("17. rposition(==5): {:?}", rpos);
 
-    // 18. any() - 是否存在匹配
+    // 18. any() - 是否存在匹配项
+    // 返回是否存在至少一个满足条件的元素
     let has_even = numbers.iter().any(|&x| x % 2 == 0);
     println!("18. any(偶数): {}", has_even);
 
     // 19. all() - 是否全部匹配
+    // 返回是否所有元素都满足条件
     let all_positive = numbers.iter().all(|&x| x > 0);
     println!("19. all(>0): {}", all_positive);
 }
@@ -131,22 +139,27 @@ fn test_transformation_methods() {
     let numbers = [1, 2, 3, 4, 5];
 
     // 20. map() - 映射
+    // 对每个元素应用函数
     let doubled: Vec<_> = numbers.iter().map(|&x| x * 2).collect();
     println!("20. map(×2): {:?}", doubled);
 
     // 21. flat_map() - 扁平映射
+    // 对每个元素应用函数，然后将结果连接起来
     let nested = [vec![1, 2], vec![3, 4], vec![5]];
     let flattened: Vec<_> = nested.iter().flat_map(|v| v.iter()).collect();
     println!("21. flat_map(): {:?}", flattened);
 
-    // 22. flatten() - 扁平化
+    // 22. flatten() - 扁平化嵌套迭代器
+    // 将嵌套的迭代器展开为一个扁平的迭代器
     let flattened2: Vec<_> = nested.iter().flatten().collect();
     println!("22. flatten(): {:?}", flattened2);
 
     // 23. inspect() - 查看中间值
+    // 对每个元素应用函数，但是不改变元素本身
+    // “在元素流过时，偷偷看一眼，顺便做点副作用，但把元素原样放行。”
     let inspected: Vec<_> = numbers
         .iter()
-        .inspect(|&x| print!("检查:{} ", x))
+        .inspect(|&&x| print!("检查:{} ", x))
         .map(|&x| x * 3)
         .collect();
     println!("\n23. inspect() + map: {:?}", inspected);
@@ -162,6 +175,8 @@ fn test_transformation_methods() {
     println!("24. scan(累加): {:?}", scanned);
 
     // 25. fuse() - 熔断迭代器
+    //  ∀ n ≥ k, if iter.next() == None at k,
+    // then iter.next() == None forever
     let mut iter = numbers.iter().fuse();
     println!(
         "25. fuse() 前几个: {:?}, {:?}, {:?}",
@@ -185,14 +200,37 @@ fn test_aggregation_methods() {
 
     let numbers = [1, 2, 3, 4, 5];
 
-    // 28. fold() - 折叠
+    // 28. fold() - 折叠 折叠（Fold）
+
+    // 含义：从一个“初始状态”开始，把一串元素逐个“折进去”
+
+    // 关键词：初始值、状态演化、过程性
+
+    // 本质比喻：
+
+    // 把一排纸条，一张一张按规则折成一个最终形状
     #[allow(clippy::unnecessary_fold)]
     let sum_fold = numbers.iter().fold(0, |acc, &x| acc + x);
     println!("28. fold(求和): {}", sum_fold);
 
-    // 29. reduce() - 归约
+    // 29. reduce() - 归约 规约（Reduce）
+
+    // 含义：把多个同类元素不断合并，最终缩减成一个元素
+
+    // 关键词：同类型合并、规模缩小、代数结构
+
+    // 本质比喻：
+
+    // 把一堆石头，两两合并，直到只剩一块
     let product_reduce = numbers.iter().copied().reduce(|acc, x| acc * x);
     println!("29. reduce(乘积): {:?}", product_reduce);
+    // | 维度     | `fold`    | `reduce`  |
+    // | ------ | --------- | --------- |
+    // | 初始状态   | 显式给定      | 取第一个元素    |
+    // | 空迭代器   | 返回 `init` | 返回 `None` |
+    // | 结合律假设  | 不要求       | **隐含要求**  |
+    // | 是否偏序安全 | 是         | 否（依赖顺序）   |
+    // | 表达意图   | 通用折叠      | 数学归约      |
 
     // 30. sum() - 求和
     let sum_total: i32 = numbers.iter().sum();
@@ -231,6 +269,7 @@ fn test_aggregation_methods() {
 
     // 38. max_by_key() - 按键最大值
     let binding = ["apple", "banana", "cherry"];
+
     let max_by_key = binding.iter().max_by_key(|s| s.len());
     println!("38. max_by_key(长度): {:?}", max_by_key);
 }
@@ -255,18 +294,21 @@ fn test_combination_methods() {
     println!("42. partition(奇偶): 偶数{:?}, 奇数{:?}", even, odd);
 
     // 43. unzip() - 解压缩
+    // 不能使用&引用，因为unzip()需要所有权
     let pairs = vec![(1, "a"), (2, "b"), (3, "c")];
     let (numbers, letters): (Vec<_>, Vec<_>) = pairs.into_iter().unzip();
     println!("43. unzip(): 数字{:?}, 字母{:?}", numbers, letters);
 
     // 44. chunks() - 分块（需要数组）
     let array = [1, 2, 3, 4, 5, 6];
-    let chunks: Vec<_> = array.chunks(2).collect();
+    let chunks: Vec<_> = array.chunks(4).collect();
     println!("44. chunks(2): {:?}", chunks);
 
     // 45. windows() - 滑动窗口
-    let windows: Vec<_> = array.windows(3).collect();
+    let windows: Vec<_> = array.windows(4).collect();
     println!("45. windows(3): {:?}", windows);
+    let windows: Vec<_> = array.windows(7).collect();
+    println!("45. windows(7): {:?}", windows);
 }
 
 fn test_advanced_methods() {
@@ -296,6 +338,10 @@ fn test_advanced_methods() {
     println!("49. last(): {:?}", last);
 
     // 50. for_each() - 遍历执行
+    // for_each 在语义上等价于 for 循环，但能力更受限；for 更通用、更符合 Rust
+    // 习惯；在长迭代器链尾部，for_each 有时更清晰，极少数情况下也可能更快。
+    // 闭包里不能 break / continue
+    // 可读性优势 —— 作为“链式末端操作”
     print!("50. for_each(): ");
     numbers.iter().for_each(|&x| print!("{} ", x));
     println!();

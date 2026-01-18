@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 
@@ -98,6 +98,13 @@ fn verify_cli() {
 
 #[test]
 fn test_full_cli_with_subcommand() {
+    let _ = dotenv::from_path("./.env");
+    let test_key = env::var("test_key").unwrap();
+    assert_eq!(test_key, "test_value");
+    let test_key = env::var_os("test_key").unwrap();
+    println!("test_key: {:?}", test_key);
+    assert_eq!(test_key.into_string().unwrap(), "test_value");
+
     // 顺序
     let cli = Cli::parse_from([
         "bin",

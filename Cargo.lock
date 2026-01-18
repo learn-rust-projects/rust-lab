@@ -397,6 +397,7 @@ name = "clap-lab"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "dotenv",
 ]
 
 [[package]]
@@ -641,6 +642,12 @@ dependencies = [
  "redox_users",
  "winapi",
 ]
+
+[[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "dummy_map"
@@ -964,6 +971,10 @@ name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+
+[[package]]
+name = "hashmap"
+version = "0.1.0"
 
 [[package]]
 name = "heck"
@@ -1843,6 +1854,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "set"
+version = "0.1.0"
+
+[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2359,6 +2374,10 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
+
+[[package]]
+name = "transmute"
+version = "0.1.0"
 
 [[package]]
 name = "typenum"
