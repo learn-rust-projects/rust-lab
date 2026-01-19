@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::rc::{Arc, Rc};
 
 use enum_dispatch::enum_dispatch;
 
@@ -23,7 +23,7 @@ impl MyTrait for RespSet {
 }
 // // 将标记的内容加上，就不是send 了
 async fn bar() {
-    let x = Rc::new(1);
+    let _x = Rc::new(1);
 }
 
 // 定义 trait

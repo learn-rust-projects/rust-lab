@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use enum_dispatch::enum_dispatch;
+use enum_dispatch::enum_dispatch;;
 
 // 定义具体类型
 pub struct RespNull;
