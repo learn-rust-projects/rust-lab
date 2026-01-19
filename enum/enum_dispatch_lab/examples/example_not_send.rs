@@ -15,8 +15,15 @@ impl MyTrait for RespNull {
 
 impl MyTrait for RespSet {
     async fn do_something(&self) {
+        let x = Rc::new(1);
+        bar().await;
+        println!("{}", x);
         println!("RespSet called");
     }
+}
+// // 将标记的内容加上，就不是send 了
+async fn bar() {
+    let x = Rc::new(1);
 }
 
 // 定义 trait
@@ -39,13 +46,12 @@ async fn main() {
 
     // 调用 trait 方法（宏生成的静态分发）
     r1.do_something().await; // 输出: RespNull called
-
-    tokio::spawn(async move { r1.do_something().await });
-    tokio::spawn(async move { r2.do_something().await });
-    // // 正确匹配元组变体
     let r1: RespEnum = RespNull.into();
-    match &r1 {
-        RespEnum::RespNull(_) => println!("Matched RespNull"),
-        RespEnum::RespSet(_) => println!("Matched RespSet"),
-    }
+    r2.do_something().await;
+    RespNull.do_something().await; //可行
+    // spawn_local 明确承诺：任务永远不会被移动到其他线程
+    tokio::task::spawn_local(async move {
+        r1.do_something().await;
+    });
+    // tokio::spawn(async move { r1.do_something().await });
 }

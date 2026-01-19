@@ -3,7 +3,7 @@ use std::time::Instant;
 use enum_dispatch::enum_dispatch;
 use rand::Rng;
 
-#[enum_dispatch]
+#[enum_dispatch(Shapes)]
 trait Shape {
     fn area(&self) -> f64;
     fn perimeter(&self) -> f64;
@@ -58,8 +58,7 @@ impl Shape for Triangle {
         self.side_a + self.side_b + self.side_c
     }
 }
-
-#[enum_dispatch(Shape)]
+#[enum_dispatch]
 #[derive(Clone)]
 enum Shapes {
     Circle,
