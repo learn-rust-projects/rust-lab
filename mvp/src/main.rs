@@ -2,7 +2,15 @@ use std::{collections::HashMap, sync::LazyLock};
 
 use chrono::Datelike;
 use clap::{Parser, Subcommand};
-use mvp::{add::context::AddStrategyFactory, error::MvpError};
+#[cfg(test)]
+use mvp::add::impls::VscodeOpts;
+use mvp::{
+    add::{
+        impls::InitOpts,
+        prelude::{AddCommand, ExcuteStrategy},
+    },
+    error::MvpError,
+};
 use tera::{Context, Result as TeraResult, Tera, Value};
 
 // Custom filter: does nothing
@@ -26,7 +34,7 @@ pub static TEMPLATES: LazyLock<Tera> = LazyLock::new(|| {
     tera
 });
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(
     version,
     about = "Short description here",
@@ -39,13 +47,13 @@ struct Cli {
     values: Option<Vec<String>>,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Commands {
     /// Add a new component
-    Add {
-        /// Name of the component to add
-        name: String,
-    },
+    #[command(subcommand)]
+    Add(AddCommand),
+    /// Initialize a new project
+    Init(InitOpts),
 }
 
 fn fill_context_with_year_and_author(context: &mut Context) {
@@ -55,6 +63,10 @@ fn fill_context_with_year_and_author(context: &mut Context) {
 }
 
 fn main() -> Result<(), MvpError> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::TRACE)
+        .init();
+    tracing::info!("Starting mvp");
     let cli = Cli::parse();
     run(&cli)
 }
@@ -66,21 +78,17 @@ fn run(cli: &Cli) -> Result<(), MvpError> {
     let mut context = Context::new();
     fill_context_with_year_and_author(&mut context);
     match &cli.command {
-        Some(Commands::Add { name }) => {
-            if let Some(handler) = AddStrategyFactory::get_add_strategy_factory().get(name) {
-                println!("Add {}", name);
-                handler.handle(&TEMPLATES, &mut context)?;
-            } else {
-                eprintln!("No strategy found for '{}'.", name);
-            }
+        Some(Commands::Add(cmd)) => {
+            println!("Add command: {}", Into::<&'static str>::into(cmd.clone()));
+            cmd.excute(&TEMPLATES, &mut context)?;
+        }
+        Some(Commands::Init(cmd)) => {
+            context.insert("init_values", &cli.values);
+            // Default to init
+            cmd.excute(&TEMPLATES, &mut context)?;
         }
         None => {
-            context.insert("init_values", &cli.values);
-            if let Some(handler) = AddStrategyFactory::get_add_strategy_factory().get("init") {
-                handler.handle(&TEMPLATES, &mut context)?;
-            } else {
-                eprintln!("No strategy found for 'init'.");
-            }
+            return Err(MvpError::NoCommand);
         }
     }
     // 这里可以根据解析到的命令行参数执行相应的逻辑
@@ -89,8 +97,6 @@ fn run(cli: &Cli) -> Result<(), MvpError> {
 
 #[cfg(test)]
 mod tests {
-
-    use std::time::Duration;
 
     use tempfile::tempdir;
 
@@ -117,9 +123,7 @@ mod tests {
 
         // 构造 CLI
         let cli = Cli {
-            command: Some(Commands::Add {
-                name: "vscode".to_string(),
-            }),
+            command: Some(Commands::Add(AddCommand::Vscode(VscodeOpts::default()))),
             values: None,
         };
 

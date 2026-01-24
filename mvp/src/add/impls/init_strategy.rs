@@ -1,41 +1,44 @@
 use std::process::Command;
 
+use clap::Parser;
+
 use super::{super::prelude::*, composite::Composite};
 
 pub struct InitStrategy;
 
-impl AddStrategy for InitStrategy {
-    fn handle(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
-        let values = context
-            .get("init_values")
-            .and_then(|v| v.as_array())
-            .ok_or_else(|| MvpError::Custom("init_values must be an array".to_owned()))?;
+#[derive(Parser, Debug, Clone, PartialEq, Eq, Hash, Default)]
+pub struct InitOpts {
+    /// 项目名称
+    #[arg(
+        help = "Name of the project (default: current directory name)",
+        default_value = "init"
+    )]
+    name: String,
 
-        let project_name = values
-            .first()
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| MvpError::Custom("Project name is required".to_owned()))?
-            .trim_matches('"')
-            .to_string();
+    /// 是否禁用 VCS (git)
+    #[arg(
+        short = 'n',
+        long,
+        help = "Disable VCS initialization (default: false)",
+        default_value_t = false
+    )]
+    no_vcs: bool,
+}
 
-        let disable_vcs = values
-            .get(1)
-            .and_then(|v| v.as_str())
-            .map(|s| s.trim_matches('"') == "n")
-            .unwrap_or(false);
+impl ExcuteStrategy for InitOpts {
+    fn excute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+        tracing::info!("开始初始化项目是否禁用 VCS {}", self.no_vcs);
+        let project_name = self.name.as_ref();
 
-        create_project(&project_name, disable_vcs)?;
-        if disable_vcs {
-            return Ok(());
-        }
+        let disable_vcs = self.no_vcs;
+
+        create_project(project_name, disable_vcs)?;
         let composite = Composite::default();
         println!("Adding init files...");
         composite.handle(tera, context)?;
         println!("Init files added.");
+        tracing::info!("项目初始化成功");
         Ok(())
-    }
-    fn name(&self) -> &str {
-        "init"
     }
 }
 

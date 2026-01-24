@@ -31,4 +31,4 @@ group_imports = "StdExternalCrate"    # Import order: standard library → exter
 # =========================================
 newline_style = "Unix"             # Use Unix line endings (\n)
 use_field_init_shorthand = true    # Use shorthand for struct initialization: X { a, b }
-use_try_shorthand = true           # Use `?` shorthand for error handling: do_something()? 
+use_try_shorthand = true           # Use `?` shorthand for error handling: do_something()?

@@ -8,10 +8,10 @@ mod vscode_strategy;
 
 mod composite;
 
-pub use ci_strategy::CiStrategy;
-pub use fmt_strategy::FmtStrategy;
-pub use git_ignore_strategy::GitIgnoreStrategy;
-pub use init_strategy::InitStrategy;
-pub use lic_strategy::LicStrategy;
-pub use md_strategy::MdStrategy;
-pub use vscode_strategy::VscodeStrategy;
+pub use ci_strategy::*;
+pub use fmt_strategy::*;
+pub use git_ignore_strategy::*;
+pub use init_strategy::*;
+pub use lic_strategy::*;
+pub use md_strategy::*;
+pub use vscode_strategy::*;

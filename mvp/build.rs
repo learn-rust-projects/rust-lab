@@ -12,10 +12,15 @@ fn main() {
     let mut map_entries = Vec::new();
 
     for file in template_files {
-        let content = fs::read_to_string(&file).expect("Failed to read template file");
+        let mut content = fs::read_to_string(&file).expect("Failed to read template file");
 
         // 模板相对路径，保留子目录
         let relative_path = file.strip_prefix(root).unwrap().to_str().unwrap();
+        // 如果是.yml文件，跳过
+        if relative_path.ends_with(".yml") {
+            // content前后添加{% raw %}和{% endraw %}
+            content = format!("{{% raw %}}\n{}\n{{% endraw %}}", content);
+        }
 
         // 生成 Rust 常量名，替换非字母数字为下划线，大写
         let const_name = relative_path

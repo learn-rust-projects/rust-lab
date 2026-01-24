@@ -8,4 +8,6 @@ pub enum MvpError {
     Io(#[from] std::io::Error),
     #[error("Custom Error: {0}")]
     Custom(String),
+    #[error("No command specified")]
+    NoCommand,
 }

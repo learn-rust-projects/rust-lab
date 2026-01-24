@@ -1,23 +1,20 @@
 use super::super::prelude::*;
-use crate::add::impls::{
-    ci_strategy::CiStrategy, fmt_strategy::FmtStrategy, git_ignore_strategy::GitIgnoreStrategy,
-    lic_strategy::LicStrategy, md_strategy::MdStrategy, vscode_strategy::VscodeStrategy,
-};
-
+use crate::add::impls::{CiOpts, FmtOpts, GitOpts, LicOpts, MdOpts, VscodeOpts};
+#[derive(Debug)]
 pub struct Composite {
-    strategies: Vec<Box<dyn AddStrategy>>,
+    strategies: Vec<Box<dyn ExcuteStrategy>>,
 }
 
 impl Default for Composite {
     fn default() -> Self {
         Self {
             strategies: vec![
-                Box::new(VscodeStrategy),
-                Box::new(FmtStrategy),
-                Box::new(MdStrategy),
-                Box::new(GitIgnoreStrategy),
-                Box::new(CiStrategy),
-                Box::new(LicStrategy),
+                Box::new(VscodeOpts::default()),
+                Box::new(FmtOpts::default()),
+                Box::new(MdOpts::default()),
+                Box::new(GitOpts::default()),
+                Box::new(CiOpts::default()),
+                Box::new(LicOpts::default()),
             ],
         }
     }
@@ -25,10 +22,11 @@ impl Default for Composite {
 
 impl Composite {
     pub fn handle(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+        tracing::info!("开始添加Composite配置");
         for strat in &self.strategies {
-            println!("Running strategy: {}", strat.name());
-            strat.handle(tera, context)?;
+            strat.excute(tera, context)?;
         }
+        tracing::info!("Composite配置添加成功");
         Ok(())
     }
 }

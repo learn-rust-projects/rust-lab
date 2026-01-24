@@ -1,4 +1,4 @@
-mod base;
-pub mod context;
+pub mod base;
+pub mod command;
 pub mod impls;
 pub mod prelude;

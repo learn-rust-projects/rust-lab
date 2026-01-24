@@ -1,101 +1,140 @@
 pub const _GITATTRIBUTES: &str = r#"*.rs text eol=lf
 *.toml text eol=lf
 *.md text eol=lf"#;
-pub const _GITHUB_WORKFLOWS_CI_YML: &str = r#"{% raw %}name: Rust CI
+pub const _GITHUB_WORKFLOWS_CI_YML: &str = r#"{% raw %}
+# GitHub Actions workflow configuration
+# For building and testing Rust projects
 
-on: [push, pull_request]
+# Workflow name
+name: build
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# Trigger conditions configuration
+on:
+  # Trigger when pushing to specific branches
+  push:
+    branches:
+      - master # Trigger on master branch push
+    tags:
+      - v* # Trigger on tags starting with v
+  # Trigger when creating pull requests
+  pull_request:
+    branches:
+      - master # Pull requests targeting master branch
+
+# Permissions configuration
+permissions:
+  contents: write # Allow writing content (for releases)
+
+# Job definitions
 jobs:
-  build-and-test:
-
-    runs-on: ${{ matrix.os }}
-
+  # Rust build job
+  build-rust:
+    # Strategy configuration, supports multi-platform builds
     strategy:
-      fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            rust-toolchain: nightly
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            rust-toolchain: nightly
-            target: x86_64-pc-windows-msvc
-          - os: macos-latest
-            rust-toolchain: nightly
-            target: x86_64-apple-darwin
-
+        platform: [ubuntu-latest] # Build platform configuration
+    # Runtime environment
+    runs-on: ${{ matrix.platform }}
+    outputs:
+      release_success: ${{ steps.Release.outcome }}
+    # Step definitions
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install jq (Linux only)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
+      # Step 1: Checkout code
+      - uses: actions/checkout@v4
         with:
-          toolchain: ${{ matrix.rust-toolchain }}
-          components: rust-src, clippy, rustfmt
-          targets: ${{ matrix.target }}
+          fetch-depth: 0 # Fetch complete history
+          submodules: recursive # Recursively checkout submodules
 
-      - name: Check rust version
-        run: rustc --version --verbose
+      # Step 2: Install Rust toolchain
+      - name: Install Rust
+        run: rustup toolchain install stable --component llvm-tools-preview
 
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
+      # Step 3: Install code coverage tool
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
 
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
+      # Step 4: Install next-generation test runner
+      - name: install nextest
+        uses: taiki-e/install-action@nextest
+
+      # Step 5: Use Rust cache to speed up builds
+
+      - uses: Swatinem/rust-cache@v2
+      # Step 6: Install Protoc
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
+      # Step 7: Check code formatting
 
       - name: Check code format
         run: cargo fmt --all -- --check
 
-      - name: Clippy
-        run: cargo clippy --target ${{ matrix.target }} --all-features -- -A clippy::new_without_default
+      # Step 8: Check package for errors
+      - name: Check the package for errors
+        run: cargo check --all
 
-      - name: Build
-        run: cargo build --target ${{ matrix.target }} --all-features
+      # Step 9: Code quality check
+      - name: Lint rust sources
+        run: cargo clippy --all-targets --all-features --tests --benches -- -D warnings
 
-      - name: Run tests
-        run: cargo test --target ${{ matrix.target }} --all-features --verbose
+      # Step 10: Execute tests
+      - name: Execute rust tests
+        run: cargo nextest run --all-features
 
-      - name: Run all binaries in workspace
-        if: runner.os == 'Linux'
+      # Step 11: Generate changelog (only executed on tag releases)
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff
+        if: startsWith(github.ref, 'refs/tags/') # Only execute on tag releases
+        with:
+          config: cliff.toml # Use cliff.toml configuration file
+          args: -vv --latest --strip header # Verbose output, latest version only, strip header
+        env:
+          OUTPUT: CHANGES.md # Output filename
+
+      # Step 12: Release to GitHub Releases (only executed on tag releases)
+      - name: Release
+        id: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') # Only execute on tag releases
+        with:
+          body: ${{ steps.git-cliff.outputs.content }} # Use generated changelog as release content
+  sync-docs:
+    needs: build-rust
+    if: needs.build-rust.outputs.release_success == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Generate CHANGELOG.md
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff
+        with:
+          config: cliff.toml
+          args: -vv
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: Commit & Push
         run: |
-          set -e
-          cargo metadata --format-version 1 --no-deps > metadata.json
-          for manifest in $(jq -r '.packages[].manifest_path' metadata.json); do
-            pkg_dir=$(dirname "$manifest")
-            cd "$pkg_dir"
-            bin_names=$(grep -A 1 '^\[\[bin\]\]' Cargo.toml | grep '^name' | awk -F'=' '{print $2}' | tr -d '"' | tr -d ' ')
-            for bin in $bin_names; do
-              echo "Running [[bin]] $bin in $pkg_dir"
-              cargo run --bin "$bin" || exit 1
-            done
-            if [ -d "src/bin" ]; then
-              for binfile in src/bin/*.rs; do
-                [ -e "$binfile" ] || continue
-                bin=$(basename "${binfile%.rs}")
-                echo "Running src/bin/$bin.rs as $bin in $pkg_dir"
-                cargo run --bin "$bin" || exit 1
-              done
-            fi
-            cd - > /dev/null
-          done{% endraw %}
-"#;
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git diff --quiet && exit 0
+          git add CHANGELOG.md
+          git commit -m "chore(release): update changelog"
+          git push origin master
+
+{% endraw %}"#;
 pub const _GITIGNORE: &str = r#"# ===============================
 # General .gitignore Template
 # ===============================
@@ -175,7 +214,15 @@ pub const _VSCODE_SETTINGS_JSON: &str = r#"{
     // Formatting and Save Settings
     // -----------------------------
     "editor.formatOnSave": true, // Automatically format code on save
-    "editor.defaultFormatter": "rust-lang.rust-analyzer", // Use Rust Analyzer as the default formatter
+    "editor.defaultFormatter": "esbenp.prettier-vscode", // Global: Use Prettier as the default formatter for all languages
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer" // Use Rust Analyzer as the default formatter
+    },
+    "[markdown]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll.markdownlint": "always", // execute markdownlint fix-all on save
+        },
+    },
     "files.autoSave": "onFocusChange", // Auto-save files when changing focus
     // -----------------------------
     // Inlay Hints (Display Type Information)
@@ -198,17 +245,21 @@ pub const _VSCODE_SETTINGS_JSON: &str = r#"{
         "FIXME",
         "BUG"
     ],
+    // -----------------------------
+    // Case Converter Configuration
+    // -----------------------------
     "caseConverter.caseCycle": [
+        "pascal", // Pascal case (first letter of each word capitalized) struct or enum or Trait
+        "snake", // Snake case (all lowercase with underscores) mod or method or variable
+        "const", // Constant case (all uppercase with underscores) const or static
+        "kebab", // Kebab case (all lowercase with hyphens) package name
         "original",
-        "const",
-        "pascal",
-        "snake",
-        "kebab"
     ],
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     }
-}"#;
+}
+"#;
 pub const _VSCODE_TASKS_JSON: &str = r#"{
     "version": "2.0.0",
     "tasks": [
@@ -221,7 +272,9 @@ pub const _VSCODE_TASKS_JSON: &str = r#"{
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": ["$rustc"],
+            "problemMatcher": [
+                "$rustc"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -458,9 +511,9 @@ pub const LICENSE_MD: &str = r#"## License
 
 Licensed under either of
 
- - Apache License, Version 2.0
+- Apache License, Version 2.0
    ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
- - MIT license
+- MIT license
    ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
@@ -469,12 +522,18 @@ at your option.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions."#;
+dual licensed as above, without any additional terms or conditions.
+"#;
 pub const README_MD: &str = r#"# xxx
 
 ## Introduction
 
-xxx is xxx. Have fun! 🎉"#;
+xxx is xxx. Have fun! 🎉
+"#;
+pub const SINGLE_LIC_MD: &str = r#"## License
+
+This project is licensed under the terms of the MIT license.
+"#;
 pub const RUSTFMT_TOML: &str = r#"# =========================================
 # Language Edition & Experimental Features
 # =========================================
@@ -508,7 +567,7 @@ group_imports = "StdExternalCrate"    # Import order: standard library → exter
 # =========================================
 newline_style = "Unix"             # Use Unix line endings (\n)
 use_field_init_shorthand = true    # Use shorthand for struct initialization: X { a, b }
-use_try_shorthand = true           # Use `?` shorthand for error handling: do_something()? 
+use_try_shorthand = true           # Use `?` shorthand for error handling: do_something()?
 "#;
 
 pub static TEMPLATE_MAP: &[(&str, &str)] = &[
@@ -521,5 +580,6 @@ pub static TEMPLATE_MAP: &[(&str, &str)] = &[
     ("LICENSE-MIT", LICENSE_MIT),
     ("LICENSE.md", LICENSE_MD),
     ("README.md", README_MD),
+    ("SINGLE-LIC.md", SINGLE_LIC_MD),
     ("rustfmt.toml", RUSTFMT_TOML),
 ];

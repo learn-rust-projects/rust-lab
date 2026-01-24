@@ -1,12 +1,26 @@
 use std::fs;
 
+use clap::Parser;
+
 use super::super::prelude::*;
 
 pub struct VscodeStrategy;
 
+#[derive(Parser, Debug, Clone, PartialEq, Eq, Hash, Default)]
+pub struct VscodeOpts {
+    /// 是否添加 tasks.json
+    #[arg(
+        long,
+        help = "Add tasks.json to .vscode directory (default: true)",
+        default_value_t = true
+    )]
+    add_tasks: bool,
+}
+
 // Add VSCode settings
-impl AddStrategy for VscodeStrategy {
-    fn handle(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+impl ExcuteStrategy for VscodeOpts {
+    fn excute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+        tracing::info!("开始添加VSCode配置");
         let target_dir = ".vscode";
         let target_file_settings = format!("{}/settings.json", target_dir);
         let target_file_tasks = format!("{}/tasks.json", target_dir);
@@ -21,9 +35,7 @@ impl AddStrategy for VscodeStrategy {
         fs::write(&target_file_tasks, tasks.as_bytes())?;
         println!("Created {}", target_file_tasks);
 
+        tracing::info!("VSCode配置添加成功");
         Ok(())
-    }
-    fn name(&self) -> &str {
-        "vscode"
     }
 }
