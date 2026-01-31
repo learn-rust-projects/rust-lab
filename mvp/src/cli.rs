@@ -1,7 +1,10 @@
 use clap::{Parser, Subcommand};
 use enum_dispatch::enum_dispatch;
 
-use crate::{sub_add::command::AddCommand, sub_template::TemplateCommand};
+use crate::{
+    sub_add::{command::AddCommand, impls::InitOpts},
+    sub_template::TemplateCommand,
+};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -25,4 +28,7 @@ pub enum Commands {
     /// Generate project templates
     #[command(subcommand)]
     Template(TemplateCommand),
+    /// 初始化新项目
+    #[command(name = "init")]
+    Init(InitOpts),
 }

@@ -16,10 +16,6 @@ use crate::{
 #[derive(PartialEq, Eq, Hash)]
 #[enum_dispatch(Strategy)]
 pub enum AddCommand {
-    /// 初始化新项目
-    #[command(name = "init")]
-    Init(InitOpts),
-
     /// 添加 VSCode 配置 (.vscode/settings.json, tasks.json)
     #[command(name = "vscode")]
     Vscode(VscodeOpts),
@@ -54,6 +50,8 @@ impl crate::strategy::CommandStrategy for AddCommand {
         crate::strategy::Strategy::execute(self, tera, context)
     }
 }
+
+
 #[cfg(test)]
 mod tests {
     use strum::IntoEnumIterator;
@@ -66,7 +64,6 @@ mod tests {
         assert_eq!(
             commands,
             vec![
-                AddCommand::Init(InitOpts::default()),
                 AddCommand::Vscode(VscodeOpts::default()),
                 AddCommand::Fmt(FmtOpts),
                 AddCommand::Md(MdOpts::default()),

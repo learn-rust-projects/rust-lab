@@ -36,13 +36,24 @@ impl Strategy for InitOpts {
         create_project(project_name, disable_vcs)?;
         let composite = Composite::default();
         println!("Adding init files...");
-        composite.handle(tera, context)?;
+        if !disable_vcs {
+            composite.handle(tera, context)?;
+        }
         println!("Init files added.");
         tracing::info!("项目初始化成功");
         Ok(())
     }
 }
-
+impl crate::strategy::CommandStrategy for InitOpts {
+    fn execute(
+        &self,
+        tera: &tera::Tera,
+        context: &mut tera::Context,
+    ) -> Result<(), crate::error::MvpError> {
+        println!("Init command: {:?}", self);
+        crate::strategy::Strategy::execute(self, tera, context)
+    }
+}
 fn create_project(project_name: &str, disable_vcs: bool) -> Result<(), MvpError> {
     println!("Creating project: {}", project_name);
     let mut cmd = Command::new("cargo");

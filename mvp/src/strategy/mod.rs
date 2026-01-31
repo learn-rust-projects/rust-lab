@@ -7,10 +7,7 @@ use tera::{Context, Tera};
 use crate::{
     cli::Commands,
     error::MvpError,
-    sub_add::{
-        command::AddCommand,
-        impls::{CiOpts, FmtOpts, GitOpts, InitOpts, LicOpts, MdOpts, VscodeOpts},
-    },
+    sub_add::{command::AddCommand, impls::InitOpts},
     sub_template::TemplateCommand,
 };
 #[enum_dispatch]
