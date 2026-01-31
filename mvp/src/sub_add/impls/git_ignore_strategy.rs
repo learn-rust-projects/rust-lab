@@ -2,7 +2,7 @@ use std::fs;
 
 use clap::Parser;
 
-use super::super::prelude::*;
+use crate::strategy::prelude::*;
 
 pub struct GitIgnoreStrategy;
 
@@ -18,8 +18,8 @@ pub struct GitOpts {
 }
 
 // Add .gitignore
-impl ExcuteStrategy for GitOpts {
-    fn excute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+impl Strategy for GitOpts {
+    fn execute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
         tracing::info!("开始添加git相关配置: .gitignore .gitattributes");
         let content = tera.render(".gitignore", context)?;
         fs::write(".gitignore", content.as_bytes())?;

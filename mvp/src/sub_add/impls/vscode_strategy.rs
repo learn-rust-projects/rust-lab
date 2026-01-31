@@ -2,7 +2,7 @@ use std::fs;
 
 use clap::Parser;
 
-use super::super::prelude::*;
+use crate::strategy::prelude::*;
 
 pub struct VscodeStrategy;
 
@@ -18,8 +18,8 @@ pub struct VscodeOpts {
 }
 
 // Add VSCode settings
-impl ExcuteStrategy for VscodeOpts {
-    fn excute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+impl Strategy for VscodeOpts {
+    fn execute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
         tracing::info!("开始添加VSCode配置");
         let target_dir = ".vscode";
         let target_file_settings = format!("{}/settings.json", target_dir);

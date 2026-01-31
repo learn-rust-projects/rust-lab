@@ -5,23 +5,16 @@
 
 use clap::Subcommand;
 use enum_dispatch::enum_dispatch;
-use strum::{Display, EnumIter, IntoEnumIterator, IntoStaticStr};
+use strum::{Display, EnumIter, IntoStaticStr};
 
 use crate::{
-    add::{
-        impls::{CiOpts, FmtOpts, GitOpts, InitOpts, LicOpts, MdOpts, VscodeOpts},
-        prelude::{Context, ExcuteStrategy, Tera},
-    },
-    error::MvpError,
+    strategy::prelude::*,
+    sub_add::impls::{CiOpts, FmtOpts, GitOpts, InitOpts, LicOpts, MdOpts, VscodeOpts},
 };
-
-/// Add 子命令枚举
-///
-/// 每个变体对应一个策略实现。枚举的定义顺序即为批量执行时的顺序。
 #[derive(Subcommand, Debug, Clone, IntoStaticStr, Display, EnumIter)]
 #[strum(serialize_all = "lowercase")]
 #[derive(PartialEq, Eq, Hash)]
-#[enum_dispatch(ExcuteStrategy)]
+#[enum_dispatch(Strategy)]
 pub enum AddCommand {
     /// 初始化新项目
     #[command(name = "init")]
@@ -51,27 +44,31 @@ pub enum AddCommand {
     #[command(name = "lic")]
     Lic(LicOpts),
 }
-
-impl AddCommand {
-    /// 返回所有命令的迭代器（按枚举定义顺序）
-    pub fn all() -> impl Iterator<Item = AddCommand> {
-        AddCommand::iter()
+impl crate::strategy::CommandStrategy for AddCommand {
+    fn execute(
+        &self,
+        tera: &tera::Tera,
+        context: &mut tera::Context,
+    ) -> Result<(), crate::error::MvpError> {
+        println!("Add command: {}", self);
+        crate::strategy::Strategy::execute(self, tera, context)
     }
 }
-
 #[cfg(test)]
 mod tests {
+    use strum::IntoEnumIterator;
+
     use super::*;
 
     #[test]
     fn test_command_order() {
-        let commands: Vec<AddCommand> = AddCommand::all().collect();
+        let commands: Vec<AddCommand> = AddCommand::iter().collect();
         assert_eq!(
             commands,
             vec![
                 AddCommand::Init(InitOpts::default()),
                 AddCommand::Vscode(VscodeOpts::default()),
-                AddCommand::Fmt(FmtOpts::default()),
+                AddCommand::Fmt(FmtOpts),
                 AddCommand::Md(MdOpts::default()),
                 AddCommand::Git(GitOpts::default()),
                 AddCommand::Ci(CiOpts::default()),

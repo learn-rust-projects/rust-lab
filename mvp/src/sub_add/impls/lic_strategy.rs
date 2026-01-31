@@ -5,7 +5,7 @@ use std::{
 
 use clap::Parser;
 
-use super::super::prelude::*;
+use crate::strategy::prelude::*;
 
 pub struct LicStrategy;
 
@@ -31,8 +31,8 @@ pub struct LicOpts {
 }
 
 // Add License
-impl ExcuteStrategy for LicOpts {
-    fn excute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+impl Strategy for LicOpts {
+    fn execute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
         tracing::info!("开始添加许可证");
         if self.apache {
             // Render and write LICENSE-APACHE

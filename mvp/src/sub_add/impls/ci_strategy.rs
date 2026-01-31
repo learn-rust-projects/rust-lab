@@ -2,7 +2,7 @@ use std::fs;
 
 use clap::Parser;
 
-use super::super::prelude::*;
+use crate::strategy::prelude::*;
 
 pub struct CiStrategy;
 
@@ -18,8 +18,8 @@ pub struct CiOpts {
 }
 
 // Add CI configuration
-impl ExcuteStrategy for CiOpts {
-    fn excute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+impl Strategy for CiOpts {
+    fn execute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
         tracing::info!("开始添加CI配置 {}", "ci.yml");
         let target_dir = ".github/workflows";
         let target_file_ci = format!("{}/{}", target_dir, "ci.yml");

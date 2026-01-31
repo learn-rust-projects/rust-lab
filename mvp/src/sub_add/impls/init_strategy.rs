@@ -2,7 +2,8 @@ use std::process::Command;
 
 use clap::Parser;
 
-use super::{super::prelude::*, composite::Composite};
+use super::composite::Composite;
+use crate::strategy::prelude::*;
 
 pub struct InitStrategy;
 
@@ -25,8 +26,8 @@ pub struct InitOpts {
     no_vcs: bool,
 }
 
-impl ExcuteStrategy for InitOpts {
-    fn excute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
+impl Strategy for InitOpts {
+    fn execute(&self, tera: &Tera, context: &mut Context) -> Result<(), MvpError> {
         tracing::info!("开始初始化项目是否禁用 VCS {}", self.no_vcs);
         let project_name = self.name.as_ref();
 
