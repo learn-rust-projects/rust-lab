@@ -169,3 +169,10 @@ where
 // Wrapper { value } 是一个未绑定到变量的临时值，表达式：Wrapper { value
 // }结束后会被丢弃     &Wrapper { value }
 // }
+
+fn _call<T>(mut f: impl FnMut(T)) -> impl FnMut((), T) {
+    // closure may outlive the current function, but it borrows `f`, which is owned
+    // by the current function may outlive borrowed value `f`
+    // 去掉move直接编译错误
+    move |(), item| f(item)
+}
