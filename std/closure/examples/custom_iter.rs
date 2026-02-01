@@ -31,7 +31,8 @@ impl MyIter {
         #[inline]
         fn call<T>(f: &mut impl FnMut(T)) -> impl FnMut((), T) {
             //  move |(), item| f(item) 相当于一个表达式，构建匿名结构体
-            move |(), item| f(item)
+            // 去掉move不会报错，因为获取的引用是从外面传来的
+            |(), item| f(item)
         }
 
         self.fold((), call(&mut f));
@@ -75,11 +76,13 @@ fn main() {
     println!("acc = {}", acc);
 
     // fn_once
-    let x = Box::new(10);
-    let mut fn_once_closure = || {
-        println!("x = {}", x);
+
+    let s = String::from("hello");
+
+    let fn_once_closure = || {
+        drop(s);
     };
-    let fn_once_closure_ref = &mut fn_once_closure;
+    // let fn_once_closure_ref = &mut fn_once_closure;
 
     let mut y = 0;
     let mut fn_mut_closure = || {
@@ -94,8 +97,10 @@ fn main() {
     // immutable borrow occurs here
     // println!("call three = {}", y);
 
-    // 注意这里传入的是 &mut FnMut => FnOnce
-    fn_once_example(fn_once_closure_ref);
+    // 注意这里传入的是 &mut FnMut => FnMut=> FnOnce
+    // 加&mut会报错要求实现FnMut
+    // 加&会报错要求实现Fn
+    fn_once_example(fn_once_closure);
     println!("call four = {}", y);
     println!("test end:| `F: FnMut` | `&mut F` | impl `FnMut` / `FnOnce`        |");
 
@@ -171,8 +176,26 @@ where
 // }
 
 fn _call<T>(mut f: impl FnMut(T)) -> impl FnMut((), T) {
-    // closure may outlive the current function, but it borrows `f`, which is owned
-    // by the current function may outlive borrowed value `f`
+    // >>>>>不move到为什么会报错
     // 去掉move直接编译错误
+    // 编译错误：生命周期只有函数作用域的可变引用被捕获到作用域中去了
+    // 完整报错信息：closure may outlive the current function, but it borrows `f`,
+    // which is owned by the current function may outlive borrowed value `f`
     move |(), item| f(item)
+}
+
+fn _move_example<T>(s: &T) -> impl Fn()
+where
+    T: std::fmt::Display,
+{
+    let f = String::from("hello");
+    // >>>>>move到底做了什么？
+    // 去掉move直接编译错误，相当于将s的引用传递给了闭包架构体
+    // move对实现 copy实现了移动语义，&T 实现了copy类型实现copy
+    // move 对所有权实现move对&T 实现了copy类型实现copy
+    move || {
+        // move occurs because `s` has type `&mut std::string::String`, which does not
+        // implement the `Copy` let y = s;
+        println!("{}{}", f, s);
+    }
 }
