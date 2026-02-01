@@ -28,16 +28,19 @@ fn test_basic_iterators() {
     println!("\n--- 基础迭代器方法测试 ---");
 
     // 1. iter() - 创建迭代器
+    // expect: [1, 2, 3, 4, 5]
     let vec = [1, 2, 3, 4, 5];
     let iter = vec.iter();
     println!("1. iter(): {:?}", iter.collect::<Vec<_>>());
 
     // 2. into_iter() - 消费迭代器
+    // expect: 6
     let vec2 = [1, 2, 3];
     let sum: i32 = vec2.into_iter().sum();
     println!("2. into_iter().sum(): {}", sum);
 
     // 3. iter_mut() - 可变迭代器
+    // expect: [2, 4, 6]
     let mut vec3 = vec![1, 2, 3];
     for item in vec3.iter_mut() {
         *item *= 2;
@@ -45,28 +48,33 @@ fn test_basic_iterators() {
     println!("3. iter_mut() 修改后: {:?}", vec3);
 
     // 4. enumerate() - 带索引的迭代器
+    // expect: [(0, &"a"), (1, &"b"), (2, &"c")]
     let items = ["a", "b", "c"];
     let enumerated: Vec<_> = items.iter().enumerate().collect();
     println!("4. enumerate(): {:?}", enumerated);
 
     // 5. rev() - 反向迭代器
+    // expect: [3, 2, 1]
     let binding = [1, 2, 3];
     let reversed: Vec<_> = binding.iter().rev().collect();
     println!("5. rev(): {:?}", reversed);
 
     // 6. chain() - 连接迭代器
+    // expect: [1, 2, 3, 4]
     let binding = [1, 2];
     let binding2 = [3, 4];
     let chain_result: Vec<_> = binding.iter().chain(binding2.iter()).collect();
     println!("6. chain(): {:?}", chain_result);
 
     // 7. zip() - 并行迭代
+    // expect: [(&1, "a"), (&2, "b"), (&3, "c")]
     let binding = [1, 2, 3];
     let binding2 = ["a", "b", "c"];
     let zipped: Vec<_> = binding.iter().zip(binding2.iter()).collect();
     println!("7. zip(): {:?}", zipped);
 
     // 8. cycle() - 循环迭代器（取前几个）
+    // expect: [1, 2, 1, 2, 1]
     let binding = [1, 2];
     let cycled: Vec<_> = binding.iter().cycle().take(5).collect();
     println!("8. cycle().take(5): {:?}", cycled);
@@ -78,10 +86,13 @@ fn test_filtering_methods() {
     let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
     // 9. filter() - 过滤
+    // expect: [&2, &4, &6, &8, &10]
     let evens: Vec<_> = numbers.iter().filter(|&&x| x % 2 == 0).collect();
     println!("9. filter(偶数): {:?}", evens);
 
     // 10. filter_map() - 过滤并映射
+    // expect: [6, 12, 18]
+    // 消耗iter
     let filtered_map: Vec<_> = numbers
         .iter()
         // 过滤内容保留some里面的内容
@@ -90,45 +101,57 @@ fn test_filtering_methods() {
     println!("10. filter_map(3的倍数×2): {:?}", filtered_map);
 
     // 11. take() - 取前n个
+    // expect: [&1, &2, &3]
     let first_three: Vec<_> = numbers.iter().take(3).collect();
     println!("11. take(3): {:?}", first_three);
 
     // 12. take_while() - 条件取前
+    // expect: [&1, &2, &3, &4]
     // 返回满足条件的元素，一旦返回false，后续元素就会被忽略
     let take_while: Vec<_> = numbers.iter().take_while(|&&x| x < 5).collect();
     println!("12. take_while(<5): {:?}", take_while);
 
     // 13. skip() - 跳过前n个
+    // expect: [&4, &5, &6, &7, &8, &9, &10]
     let skip_three: Vec<_> = numbers.iter().skip(3).collect();
     println!("13. skip(3): {:?}", skip_three);
 
     // 14. skip_while() - 条件跳过前n个
+    // expect: [&5, &6, &7, &8, &9, &10]
     // 返回满足条件的元素，一旦返回false，后续元素就会被保留
     let skip_while: Vec<_> = numbers.iter().skip_while(|&&x| x < 5).collect();
     println!("14. skip_while(<5): {:?}", skip_while);
 
     // 15. find() - 查找第一个匹配项
+    // expect: Some(&8)
     // 返回第一个满足条件的元素，否则返回None
+    // 需要返回元素，所以不应该消耗
     let found = numbers.iter().find(|&&x| x > 7);
     println!("15. find(>7): {:?}", found);
 
     // 16. position() - 查找位置
+    // expect: Some(4)
     // 返回第一个满足条件的元素的索引，否则返回None
     let pos = numbers.iter().position(|&x| x == 5);
     println!("16. position(==5): {:?}", pos);
 
     // 17. rposition() - 反向查找位置
+    // expect: Some(4)
     // 返回从后往前第一个满足条件的元素的索引，否则返回None
     let rpos = numbers.iter().rposition(|&x| x == 5);
     println!("17. rposition(==5): {:?}", rpos);
 
     // 18. any() - 是否存在匹配项
+    // expect: true
     // 返回是否存在至少一个满足条件的元素
+    // 消耗迭代器返回是否所有元素都满足条件
     let has_even = numbers.iter().any(|&x| x % 2 == 0);
     println!("18. any(偶数): {}", has_even);
 
     // 19. all() - 是否全部匹配
-    // 返回是否所有元素都满足条件
+    // expect: true
+    // 消耗迭代器返回是否所有元素都满足条件
+    // 只关心"是否全部满足条件"，不关心具体元素
     let all_positive = numbers.iter().all(|&x| x > 0);
     println!("19. all(>0): {}", all_positive);
 }
@@ -139,24 +162,43 @@ fn test_transformation_methods() {
     let numbers = [1, 2, 3, 4, 5];
 
     // 20. map() - 映射
+    // expect: [2, 4, 6, 8, 10]
     // 对每个元素应用函数
     let doubled: Vec<_> = numbers.iter().map(|&x| x * 2).collect();
     println!("20. map(×2): {:?}", doubled);
 
     // 21. flat_map() - 扁平映射
+    // expect: [1, 2, 3, 4, 5]
     // 对每个元素应用函数，然后将结果连接起来
+    // 源码分析：U: IntoIterator
+    // Option 只是 最小的迭代结构
+    // 对于每个元素，产生一个迭代器，然后把所有迭代器连在一起,yield里面的元素
+    // 而None则产生一个空的迭代器
     let nested = [vec![1, 2], vec![3, 4], vec![5]];
     let flattened: Vec<_> = nested.iter().flat_map(|v| v.iter()).collect();
+    // 经典用法：二维结构 → 一维流
     println!("21. flat_map(): {:?}", flattened);
+    // 21.1 经典用法示例
+    // expect: [0, 0, 1, 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4]
+    let out: Vec<_> = (1..=5).flat_map(|n| 0..n).collect();
+    println!("    经典用法 1..=5.flat_map(0..n): {:?}", out);
+
+    let v = vec![Ok(1), Err("e"), Ok(2)];
+    // 21.2 过滤掉错误的结果 过滤掉None
+    // expect: [1, 2]
+    let out: Vec<_> = v.into_iter().flat_map(Result::ok).collect();
+    println!("    经典用法 过滤Ok: {:?}", out);
 
     // 22. flatten() - 扁平化嵌套迭代器
+    // expect: [1, 2, 3, 4, 5]
     // 将嵌套的迭代器展开为一个扁平的迭代器
     let flattened2: Vec<_> = nested.iter().flatten().collect();
     println!("22. flatten(): {:?}", flattened2);
 
     // 23. inspect() - 查看中间值
+    // expect: [3, 6, 9, 12, 15]
     // 对每个元素应用函数，但是不改变元素本身
-    // “在元素流过时，偷偷看一眼，顺便做点副作用，但把元素原样放行。”
+    // "在元素流过时，偷偷看一眼，顺便做点副作用，但把元素原样放行。"
     let inspected: Vec<_> = numbers
         .iter()
         .inspect(|&&x| print!("检查:{} ", x))
@@ -165,6 +207,7 @@ fn test_transformation_methods() {
     println!("\n23. inspect() + map: {:?}", inspected);
 
     // 24. scan() - 带状态的转换
+    // expect: [1, 3, 6, 10, 15]
     let scanned: Vec<_> = numbers
         .iter()
         .scan(0, |state, &x| {
@@ -175,7 +218,8 @@ fn test_transformation_methods() {
     println!("24. scan(累加): {:?}", scanned);
 
     // 25. fuse() - 熔断迭代器
-    //  ∀ n ≥ k, if iter.next() == None at k,
+    // expect: Some(&1), Some(&2), Some(&3)
+    // ∀ n ≥ k, if iter.next() == None at k,
     // then iter.next() == None forever
     let mut iter = numbers.iter().fuse();
     println!(
@@ -186,11 +230,13 @@ fn test_transformation_methods() {
     );
 
     // 26. cloned() - 克隆元素
+    // expect: [1, 2, 3, 4, 5]
     #[allow(clippy::iter_cloned_collect)]
     let cloned: Vec<_> = numbers.iter().cloned().collect();
     println!("26. cloned(): {:?}", cloned);
     #[allow(clippy::iter_cloned_collect)]
     // 27. copied() - 复制元素
+    // expect: [1, 2, 3, 4, 5]
     let copied: Vec<_> = numbers.iter().copied().collect();
     println!("27. copied(): {:?}", copied);
 }
@@ -214,6 +260,7 @@ fn test_aggregation_methods() {
     println!("28. fold(求和): {}", sum_fold);
 
     // 29. reduce() - 归约 规约（Reduce）
+    // expect: Some(120)
 
     // 含义：把多个同类元素不断合并，最终缩减成一个元素
 
@@ -233,41 +280,50 @@ fn test_aggregation_methods() {
     // | 表达意图   | 通用折叠      | 数学归约      |
 
     // 30. sum() - 求和
+    // expect: 15
     let sum_total: i32 = numbers.iter().sum();
     println!("30. sum(): {}", sum_total);
 
     // 31. product() - 求积
+    // expect: 120
     let product_total: i32 = numbers.iter().product();
     println!("31. product(): {}", product_total);
 
     // 32. count() - 计数
+    // expect: 5
     let count = numbers.iter().count();
     println!("32. count(): {}", count);
 
     // 33. min() - 最小值
+    // expect: Some(&1)
     let min_val = numbers.iter().min();
     println!("33. min(): {:?}", min_val);
 
     // 34. max() - 最大值
+    // expect: Some(&5)
     let max_val = numbers.iter().max();
     println!("34. max(): {:?}", max_val);
 
     // 35. min_by() - 自定义比较最小值
+    // expect: Some(&"apple")
     let binding = ["apple", "banana", "cherry"];
     let min_by_len = binding.iter().min_by(|a, b| a.len().cmp(&b.len()));
     println!("35. min_by(长度): {:?}", min_by_len);
 
     // 36. max_by() - 自定义比较最大值
+    // expect: Some(&"cherry")
     let binding = ["apple", "banana", "cherry"];
     let max_by_len = binding.iter().max_by(|a, b| a.len().cmp(&b.len()));
     println!("36. max_by(长度): {:?}", max_by_len);
 
     // 37. min_by_key() - 按键最小值
+    // expect: Some(&"apple")
     let binding = ["apple", "banana", "cherry"];
     let min_by_key = binding.iter().min_by_key(|s| s.len());
     println!("37. min_by_key(长度): {:?}", min_by_key);
 
     // 38. max_by_key() - 按键最大值
+    // expect: Some(&"cherry")
     let binding = ["apple", "banana", "cherry"];
 
     let max_by_key = binding.iter().max_by_key(|s| s.len());
@@ -278,35 +334,43 @@ fn test_combination_methods() {
     println!("\n--- 组合和分组方法测试 ---");
 
     // 39. collect() - 收集到集合
+    // expect: [1, 2, 3, 4, 5]
     let collected_vec: Vec<_> = (1..6).collect();
     println!("39. collect(Vec): {:?}", collected_vec);
 
     // 40. collect::<HashSet>()
+    // expect: {1, 2, 3}
     let collected_set: HashSet<_> = vec![1, 2, 2, 3, 3].into_iter().collect();
     println!("40. collect(HashSet): {:?}", collected_set);
 
     // 41. collect::<HashMap>()
+    // expect: {"a": 1, "b": 2}
     let collected_map: HashMap<_, _> = vec![("a", 1), ("b", 2)].into_iter().collect();
     println!("41. collect(HashMap): {:?}", collected_map);
 
     // 42. partition() - 分区
+    // expect: 偶数[2, 4], 奇数[1, 3, 5]
     let (even, odd): (Vec<_>, Vec<_>) = (1..6).partition(|&x| x % 2 == 0);
     println!("42. partition(奇偶): 偶数{:?}, 奇数{:?}", even, odd);
 
     // 43. unzip() - 解压缩
+    // expect: 数字[1, 2, 3], 字母["a", "b", "c"]
     // 不能使用&引用，因为unzip()需要所有权
     let pairs = vec![(1, "a"), (2, "b"), (3, "c")];
     let (numbers, letters): (Vec<_>, Vec<_>) = pairs.into_iter().unzip();
     println!("43. unzip(): 数字{:?}, 字母{:?}", numbers, letters);
 
     // 44. chunks() - 分块（需要数组）
+    // expect: [[1, 2, 3, 4], [5, 6]]
     let array = [1, 2, 3, 4, 5, 6];
     let chunks: Vec<_> = array.chunks(4).collect();
     println!("44. chunks(2): {:?}", chunks);
 
     // 45. windows() - 滑动窗口
+    // expect: [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]]
     let windows: Vec<_> = array.windows(4).collect();
     println!("45. windows(3): {:?}", windows);
+    // expect: []
     let windows: Vec<_> = array.windows(7).collect();
     println!("45. windows(7): {:?}", windows);
 }
@@ -317,10 +381,12 @@ fn test_advanced_methods() {
     let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
     // 46. step_by() - 步进迭代
+    // expect: [&1, &3, &5, &7, &9]
     let step_by: Vec<_> = numbers.iter().step_by(2).collect();
     println!("46. step_by(2): {:?}", step_by);
 
     // 47. peekable() - 可窥视迭代器
+    // expect: 下一个Some(&1), 窥视Some(&2)
     let mut peekable = numbers.iter().peekable();
     println!(
         "47. peekable(): 下一个{:?}, 窥视{:?}",
@@ -329,15 +395,18 @@ fn test_advanced_methods() {
     );
 
     // 48. nth() - 获取第n个元素
+    // expect: Some(&3)
     #[allow(clippy::iter_nth)]
     let third = numbers.iter().nth(2);
     println!("48. nth(2): {:?}", third);
 
     // 49. last() - 最后一个元素
+    // expect: Some(&10)
     let last = numbers.iter().last();
     println!("49. last(): {:?}", last);
 
     // 50. for_each() - 遍历执行
+    // expect: 1 2 3 4 5 6 7 8 9 10
     // for_each 在语义上等价于 for 循环，但能力更受限；for 更通用、更符合 Rust
     // 习惯；在长迭代器链尾部，for_each 有时更清晰，极少数情况下也可能更快。
     // 闭包里不能 break / continue
@@ -347,6 +416,7 @@ fn test_advanced_methods() {
     println!();
 
     // 51. try_fold() - 可失败的折叠
+    // expect: Ok(55)
     let try_fold_result: Result<i32, &str> = numbers.iter().try_fold(0, |acc, &x| {
         if x > 10 {
             Err("值太大")
@@ -357,6 +427,7 @@ fn test_advanced_methods() {
     println!("51. try_fold(): {:?}", try_fold_result);
 
     // 52. try_for_each() - 可失败的遍历
+    // expect: Ok(())
     let try_foreach_result: Result<(), &str> = numbers
         .iter()
         .try_for_each(|&x| if x > 10 { Err("值太大") } else { Ok(()) });
@@ -378,16 +449,19 @@ fn test_less_common_methods() {
     let numbers = [1, 2, 3, 4, 5];
 
     // 57. by_ref() - 借用迭代器
+    // expect: [1, 2], 剩余: [3, 4, 5]
     let mut iter = numbers.iter();
     let first_two: Vec<_> = iter.by_ref().take(2).collect();
     println!("57. by_ref().take(2): {:?}", first_two);
     println!("   剩余: {:?}", iter.collect::<Vec<_>>());
 
     // 58. intersperse() - 插入分隔符
+    // expect: [1, 0, 2, 0, 3, 0, 4, 0, 5]
     let interspersed: Vec<_> = numbers.iter().intersperse(&0).collect();
     println!("58. intersperse(0): {:?}", interspersed);
 
     // 59. intersperse_with() - 自定义分隔符
+    // expect: [1, 1, 2, 2, 3, 2, 4, 2, 5]
     let mut counter = 0;
     let interspersed_with: Vec<_> = numbers
         .into_iter()
@@ -399,6 +473,7 @@ fn test_less_common_methods() {
     println!("59. intersperse_with(计数器): {:?}", interspersed_with);
 
     // 60. map_while() - 条件映射
+    // expect: [10, 20, 30]
     let binding = [1, 2, 3, 4, 5];
     let map_while: Vec<_> = binding
         .iter()
@@ -407,6 +482,7 @@ fn test_less_common_methods() {
     println!("60. map_while(<4 → ×10): {:?}", map_while);
 
     // 61. take_while() 和 map() 组合
+    // expect: [2, 4, 6]
     let binding = [1, 2, 3, 4, 5];
     let complex: Vec<_> = binding
         .iter()
@@ -416,6 +492,7 @@ fn test_less_common_methods() {
     println!("61. take_while(<4) + map(×2): {:?}", complex);
 
     // 62. skip_while() 和 filter() 组合
+    // expect: [&4]
     let binding = [1, 2, 3, 4, 5];
     let complex2: Vec<_> = binding
         .iter()

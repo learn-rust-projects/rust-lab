@@ -12,29 +12,36 @@ fn main() {
 
     // get
     // 获取元素
+    // Option<&T>
     println!("Get 20: {:?}", set.get(&20));
     println!("Get 40: {:?}", set.get(&40));
 
     // take
     // 从集合中移出元素
+    // -> Option<T>
     println!("Take 20: {:?}", set.take(&20));
     println!("After taking 20: {:?}", set);
 
     // 检查元素是否存在
+    // -> bool
     println!("Contains 20: {}", set.contains(&20));
     println!("Contains 40: {}", set.contains(&40));
 
     // 获取HashSet的大小
+    // -> usize
     println!("Size of HashSet: {}", set.len());
 
     // 检查是否为空
+    // -> bool
     println!("Is empty? {}", set.is_empty());
 
     // 移除元素
+    // -> bool
     println!("Removed 20: {:?}", set.remove(&20));
     println!("After removing 20: {:?}", set);
 
     // 迭代元素
+    //
     println!("Iterating over elements:");
     for &element in &set {
         println!("Element: {}", element);
@@ -47,6 +54,8 @@ fn main() {
     println!("Set2: {:?}", set2);
 
     // Union (并集)
+    // union返回的是引用，需要cloned()转换为拥有所有权的值
+    // (&'a self, other: &'a HashSet<T, S>) -> Union<'a, T, S>
     let union: HashSet<_> = set1.union(&set2).cloned().collect();
     println!("Union: {:?}", union);
 
@@ -55,10 +64,12 @@ fn main() {
     println!("Intersection: {:?}", intersection);
 
     // Difference (差集)
+    // 差集的意思是：在set1中有但在set2中没有的元素
     let difference: HashSet<_> = set1.difference(&set2).cloned().collect();
     println!("Difference (set1 - set2): {:?}", difference);
 
     // Symmetric Difference (对称差集)
+    // 对称差集的意思是：在set1或set2中有但不同时在两个集合中的元素
     let symmetric_difference: HashSet<_> = set1.symmetric_difference(&set2).cloned().collect();
     println!("Symmetric Difference: {:?}", symmetric_difference);
 
@@ -102,6 +113,7 @@ fn main() {
     // 演示retain方法
     let mut retain_set: HashSet<_> = [1, 2, 3, 4, 5, 6].iter().cloned().collect();
     println!("\nOriginal retain_set: {:?}", retain_set);
+    // retain保留满足条件的元素
     retain_set.retain(|&x| x % 2 == 0);
     println!("After retaining even numbers: {:?}", retain_set);
 
