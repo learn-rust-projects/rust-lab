@@ -152,7 +152,7 @@ fn test_transformation_methods() {
 
     // insert() - 插入值（如果为None）
     let mut none = None;
-    none.insert(3);
+    let _ = none.insert(3);
     assert_eq!(none, Some(3));
 
     // take() - 取出值并替换为None

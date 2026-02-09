@@ -41,5 +41,5 @@ members = [
     "std/mem/transmute",
     "std/collections/vec",
     "std/collections/hashmap", "std/collections/set",
-    "async-lab/io-uring-runtime", "std/closure", "alloc/slice", 
+    "async-lab/io-uring-runtime", "std/closure", "alloc/slice", "core/u8", 
 ]
