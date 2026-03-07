@@ -1,4 +1,4 @@
-#![feature(slice_as_array)]
+//#![feature(slice_as_array)]
 #![feature(slice_split_once)]
 #![feature(trim_prefix_suffix)]
 #![feature(slice_partition_dedup)]
