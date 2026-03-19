@@ -1,3 +1,10 @@
+#![feature(log_syntax)]
+
+macro_rules! sing {
+    () => {};
+    ($tt:tt $($rest:tt)*) => {log_syntax!($tt); sing!($($rest)*);};
+}
+
 use macro_example::recurrence;
 
 fn main() {
@@ -6,5 +13,14 @@ fn main() {
 
     for e in fib.take(10) {
         println!("{}", e)
+    }
+
+    sing! {
+        ^ < @ < . @ *
+        '\x08' '{' '"' _ # ' '
+        - @ '$' && / _ %
+        ! ( '\t' @ | = >
+        ; '\x08' '\'' + '$' ? '\x7f'
+        , # '"' ~ | ) '\x07'
     }
 }
