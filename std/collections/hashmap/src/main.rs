@@ -218,4 +218,19 @@ mod tests {
         assert_eq!(cloned_map.len(), 2);
         assert_eq!(cloned_map.get("a"), Some(&1));
     }
+
+    #[test]
+    fn test_and_or_insert_order() {
+        let mut map = HashMap::new();
+        map.insert("a", 1);
+        map.insert("b", 2);
+
+        // 有的话加1，没有插入0
+        map.entry("count").and_modify(|v| *v += 1).or_insert(1);
+        assert_eq!(map["count"], 1);
+        // 没有插入0，返回V
+        let v = map.entry("count2").or_insert(0);
+        *v += 1;
+        assert_eq!(map["count2"], 1);
+    }
 }

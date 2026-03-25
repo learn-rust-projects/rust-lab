@@ -621,4 +621,12 @@ mod tests {
         assert_eq!(vec.iter().min(), Some(&1));
         assert_eq!(vec.iter().max(), Some(&5));
     }
+    // #[test]
+    // fn test_iter() {
+    //     fn dup_in_place(v: &mut Vec<i32>) {
+    //         for n_ref in v.iter_mut() {
+    //             v.push(*n_ref);
+    //         }
+    //     }
+    // }
 }
