@@ -27,14 +27,12 @@ pub mod capacity_tests {
         assert!(v.is_empty());
 
         let v: Vec<i32> = Vec::with_capacity(0);
-        assert!(v.capacity() >= 0);
 
         println!("test_with_capacity passed");
     }
 
     pub fn test_capacity() {
         let v: Vec<i32> = Vec::new();
-        assert!(v.capacity() >= 0);
 
         let v = vec![1, 2, 3];
         assert_eq!(v.capacity(), 3);
@@ -83,7 +81,6 @@ pub mod capacity_tests {
 
         let mut v: Vec<i32> = vec![];
         v.shrink_to_fit();
-        assert!(v.capacity() >= 0);
 
         println!("test_shrink_to_fit passed");
     }
