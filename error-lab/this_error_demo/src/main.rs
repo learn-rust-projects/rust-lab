@@ -16,8 +16,11 @@ enum ParserError {
     #[error("Data validation failed")]
     InvalidData {
         #[source] // Explicitly mark the source error
+        #[from] // Automatically implement From<InvalidDataError>
         cause: InvalidDataError,
     },
+    #[error("invalid header (expected {expected:?}, found {found:?})")]
+    InvalidHeader { expected: String, found: String },
 }
 
 // Custom business logic error
@@ -42,8 +45,8 @@ fn validate_data(data: &str) -> Result<(), InvalidDataError> {
 }
 
 fn process_data(data: &str) -> Result<(), ParserError> {
-    validate_data(data).map_err(|e| ParserError::InvalidData { cause: e })?;
-
+    // validate_data(data).map_err(|e| ParserError::InvalidData { cause: e })?;
+    validate_data(data)?;
     Ok(())
 }
 
@@ -59,4 +62,11 @@ fn main() {
     println!("Validation Error Print: {}", validation_err);
     println!("Validation Error Debug: {:?}", validation_err);
     println!("Source: {:?}", validation_err.source()); // Can get InvalidDataError
+
+    let header_err = ParserError::InvalidHeader {
+        expected: "application/json".into(),
+        found: "text/plain".into(),
+    };
+    println!("Header Error Print: {}", header_err);
+    println!("Header Error Debug: {:?}", header_err);
 }
