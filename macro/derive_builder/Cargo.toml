@@ -1,0 +1,9 @@
+[package]
+name = "derive_builder"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+derive_builder = "0.20"
+anyhow = "1.0.81"
+chrono = { version = "0.4.37", features = ["serde"] }
