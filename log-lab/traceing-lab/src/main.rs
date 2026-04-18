@@ -1,6 +1,12 @@
 use std::{fmt::write, io::Write, time::Duration};
 
 use axum::{Router, extract::Request, routing::get};
+use opentelemetry::{KeyValue, trace::TracerProvider};
+use opentelemetry_otlp::{SpanExporter, WithExportConfig};
+use opentelemetry_sdk::{
+    Resource, runtime,
+    trace::{self, BatchSpanProcessor, RandomIdGenerator, SdkTracerProvider, Tracer},
+};
 use tokio::{
     join,
     time::{Instant, sleep},
@@ -27,11 +33,12 @@ async fn main() -> anyhow::Result<()> {
         .with_writer(non_blocking)
         .pretty()
         .with_filter(LevelFilter::TRACE);
-
+    let tracer = init_tracer()?;
+    let opentelemetry = tracing_opentelemetry::layer().with_tracer(tracer);
     tracing_subscriber::registry()
         .with(console)
         .with(file)
-        // .with(opentelemetry)
+        .with(opentelemetry)
         .init();
 
     let addr = "0.0.0.0:8080";
@@ -79,4 +86,27 @@ async fn task2() {
 #[instrument]
 async fn task3() {
     sleep(Duration::from_millis(30)).await;
+}
+
+fn init_tracer() -> anyhow::Result<Tracer> {
+    let exporter = SpanExporter::builder()
+        .with_tonic()
+        .with_endpoint("http://localhost:4317")
+        .build()?;
+
+    let processor = BatchSpanProcessor::builder(exporter).build();
+    // Create a new OpenTelemetry trace pipeline that prints to stdout
+    let provider = SdkTracerProvider::builder()
+        .with_id_generator(RandomIdGenerator::default())
+        .with_max_events_per_span(32)
+        .with_max_attributes_per_span(64)
+        .with_span_processor(processor)
+        .with_resource(
+            Resource::builder()
+                .with_service_name("axum-tracing")
+                .build(),
+        )
+        .build();
+    let tracer = provider.tracer("readme_example");
+    Ok(tracer)
 }
