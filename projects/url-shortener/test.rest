@@ -1,0 +1,10 @@
+### 1. 生成短链接：POST 请求
+POST https://127.0.0.1:5432/
+Content-Type: application/json
+
+{
+  "url": "http://github.com"
+}
+
+### 2. 生成短链接：POST 请求
+GET http://127.0.0.1:5432/5iO1je

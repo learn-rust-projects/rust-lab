@@ -1,0 +1,10 @@
+### 测试
+GET http://localhost:8080/
+### 更新用户信息
+PATCH http://localhost:8080/ 
+Content-Type: application/json
+
+{
+"skills": ["Rust", "Go", "TypeScript"]
+}
+        

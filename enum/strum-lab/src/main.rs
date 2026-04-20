@@ -1,6 +1,6 @@
 use strum::{
     AsRefStr, Display, EnumCount, EnumIter, EnumMessage, EnumProperty, EnumString,
-    IntoEnumIterator, IntoStaticStr,
+    IntoEnumIterator, IntoStaticStr, VariantArray, VariantIterator, VariantMetadata, VariantNames,
 };
 /// 颜色枚举 - 展示strum的各种功能
 #[derive(
@@ -15,6 +15,8 @@ use strum::{
     EnumMessage,
     AsRefStr,
     IntoStaticStr,
+    // VariantArray,
+    VariantNames,
 )]
 #[strum(serialize_all = "lowercase")]
 /// 【Strum serialize_all 风格转换对照表】
@@ -215,7 +217,12 @@ fn main() {
     );
     println!();
 
-    println!("=== 所有功能演示完成 ===");
+    println!("11. VariantArray trait (对应 VariantArray 宏):");
+    let variants = Color::VARIANTS;
+    for variant in variants {
+        println!("   变体: {}", variant);
+    }
+    println!("   Color 的变体数组: {:?}", variants);
 }
 
 #[cfg(test)]
