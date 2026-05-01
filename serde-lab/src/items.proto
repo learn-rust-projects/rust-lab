@@ -1,18 +1,45 @@
 syntax = "proto3";
-
 package snazzy.items;
 
 // A snazzy new shirt!
 message Shirt {
     // Label sizes
+    // your will see enum method to lib.rs
     enum Size {
         SMALL = 0;
         MEDIUM = 1;
         LARGE = 2;
     }
-
     // The base color
     string color = 1;
     // The size as stated on the label
     Size size = 2;
+    Size size1 = 3;
+}
+
+message Person {
+    string name = 1;
+    repeated string phones = 3;
+}
+
+message Foo {
+    oneof widget {
+        int32 quux = 1;
+        string bar = 2;
+    }
+    string color = 3;
+}
+
+// do not have Eq, Hash becuse have repeated struct
+message AddressBook {
+    repeated Person people = 1;
+}
+
+
+message AddressBook2 {
+    Foo foo = 2;
+}
+
+message OnlyCopy {
+    int32 number = 1;
 }
