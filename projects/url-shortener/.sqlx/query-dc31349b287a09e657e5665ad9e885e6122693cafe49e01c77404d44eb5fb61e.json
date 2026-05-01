@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\nCREATE TABLE IF NOT EXISTS urls (\n    id CHAR(6) PRIMARY KEY,\n    url VARCHAR(512) NOT NULL UNIQUE\n)\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "dc31349b287a09e657e5665ad9e885e6122693cafe49e01c77404d44eb5fb61e"
+}
