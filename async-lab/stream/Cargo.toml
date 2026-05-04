@@ -4,6 +4,146 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-tokio = { version = "1.0", features = ["full"] }
-futures = "0.3"
-tokio-stream = { version = "0.1", features = ["sync", "net", "time"] }
+tokio = { version = "1.52.1", features = ["full"] }
+futures = "0.3.32"
+tokio-stream = { version = "0.1.18", features = [
+    "sync",
+    "net",
+    "time",
+    "fs",
+    "signal",
+    "io-util",
+] }
+
+# ======================
+# Stream Wrappers (01-09)
+# ======================
+[[example]]
+name = "01_interval_stream"
+path = "examples/01_interval_stream.rs"
+
+[[example]]
+name = "02_watch_stream"
+path = "examples/02_watch_stream.rs"
+
+[[example]]
+name = "03_receiver_stream"
+path = "examples/03_receiver_stream.rs"
+
+[[example]]
+name = "04_signal_stream"
+path = "examples/04_signal_stream.rs"
+
+[[example]]
+name = "05_tcp_listener_stream"
+path = "examples/05_tcp_listener_stream.rs"
+
+[[example]]
+name = "06_broadcast_stream"
+path = "examples/06_broadcast_stream.rs"
+
+[[example]]
+name = "07_unbounded_receiver_stream"
+path = "examples/07_unbounded_receiver_stream.rs"
+
+[[example]]
+name = "08_read_dir_stream"
+path = "examples/08_read_dir_stream.rs"
+
+[[example]]
+name = "09_lines_stream"
+path = "examples/09_lines_stream.rs"
+
+# ======================
+# Stream Combinators (10-25)
+# ======================
+[[example]]
+name = "10_chain"
+path = "examples/10_chain.rs"
+
+[[example]]
+name = "11_chunks_timeout"
+path = "examples/11_chunks_timeout.rs"
+
+[[example]]
+name = "12_filter"
+path = "examples/12_filter.rs"
+
+[[example]]
+name = "13_filter_map"
+path = "examples/13_filter_map.rs"
+
+[[example]]
+name = "14_fuse"
+path = "examples/14_fuse.rs"
+
+[[example]]
+name = "15_map"
+path = "examples/15_map.rs"
+
+[[example]]
+name = "16_map_while"
+path = "examples/16_map_while.rs"
+
+[[example]]
+name = "17_merge"
+path = "examples/17_merge.rs"
+
+[[example]]
+name = "18_peekable"
+path = "examples/18_peekable.rs"
+
+[[example]]
+name = "19_skip"
+path = "examples/19_skip.rs"
+
+[[example]]
+name = "20_skip_while"
+path = "examples/20_skip_while.rs"
+
+[[example]]
+name = "21_take"
+path = "examples/21_take.rs"
+
+[[example]]
+name = "22_take_while"
+path = "examples/22_take_while.rs"
+
+[[example]]
+name = "23_then"
+path = "examples/23_then.rs"
+
+[[example]]
+name = "24_timeout"
+path = "examples/30_timeout.rs"
+
+[[example]]
+name = "25_timeout_repeating"
+path = "examples/31_timeout_repeating.rs"
+
+# ======================
+# Stream Utilities (26-33)
+# ======================
+[[example]]
+name = "26_all"
+path = "examples/26_all.rs"
+
+[[example]]
+name = "27_any"
+path = "examples/27_any.rs"
+
+[[example]]
+name = "28_fold"
+path = "examples/28_fold.rs"
+
+[[example]]
+name = "29_collect"
+path = "examples/29_collect.rs"
+
+[[example]]
+name = "stream_timeout"
+path = "examples/stream_timeout.rs"
+
+[[example]]
+name = "30_throttle"
+path = "examples/31_throttle.rs"

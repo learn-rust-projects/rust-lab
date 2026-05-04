@@ -1,0 +1,97 @@
+// Copyright 2015 gRPC authors.
+//
+// 根据 Apache License 2.0（"License"）授权；
+// 除非遵守 License，否则不得使用此文件。
+// 您可以在以下网址获取 License 的副本：
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// 除非适用法律或书面同意，否则根据 License 分发的软件
+// 按"原样"分发，不提供任何明示或暗示的保证或条件。
+// 有关管理权限和限制的特定语言，请参阅 License。
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.routeguide";
+option java_outer_classname = "RouteGuideProto";
+
+package routeguide;
+
+// 服务器导出的接口。
+service RouteGuide {
+  // 简单的 RPC。
+  //
+  // 获取给定位置的要素。
+  //
+  // 如果给定位置没有要素，则返回空名称的要素。
+  rpc GetFeature(Point) returns (Feature) {}
+
+  // 服务端到客户端流式 RPC。
+  //
+  // 获取给定矩形内的可用要素。 结果以流式返回而不是一次性返回（例如在包含重复字段的响应消息中），因为矩形可能覆盖很大的区域并包含大量要素。
+  rpc ListFeatures(Rectangle) returns (stream Feature) {}
+
+  // 客户端到服务端流式 RPC。
+  //
+  // 接受正在遍历的路线上的一系列点，遍历完成后返回路线摘要。
+  rpc RecordRoute(stream Point) returns (RouteSummary) {}
+
+  // 双向流式 RPC。
+  //
+  // 接受在遍历路线时发送的一系列 RouteNote，同时接收其他 RouteNote（例如来自其他用户）。
+  rpc RouteChat(stream RouteNote) returns (stream RouteNote) {}
+}
+
+// 点以纬度-经度对的形式表示，采用 E7 表示法（度数乘以 10**7 并四舍五入到最接近的整数）。
+// 纬度应在 +/- 90 度范围内，经度应在 +/- 180 度范围内（含）。
+message Point {
+  int32 latitude = 1;
+  int32 longitude = 2;
+}
+
+// 纬度-经度矩形，表示为两个对角相对的点 "lo" 和 "hi"。
+message Rectangle {
+  // 矩形的一个角。
+  Point lo = 1;
+
+  // 矩形的另一个角。
+  Point hi = 2;
+}
+
+// 要素表示给定位置的名称。
+//
+// 如果要素没有名称，则名称为空。
+message Feature {
+  // 要素的名称。
+  string name = 1;
+
+  // 要素所在的位置。
+  Point location = 2;
+}
+
+// RouteNote 是在给定位置发送的消息。
+message RouteNote {
+  // 发送消息的位置。
+  Point location = 1;
+
+  // 要发送的消息。
+  string message = 2;
+}
+
+// RouteSummary 是对 RecordRoute RPC 请求的响应。
+//
+// 它包含接收的独立点数、检测到的要素数，以及每个点之间距离的累计总和所覆盖的总距离。
+message RouteSummary {
+  // 接收的点数。
+  int32 point_count = 1;
+
+  // 遍历路线时经过的已知要素数。
+  int32 feature_count = 2;
+
+  // 以米为单位的距离。
+  int32 distance = 3;
+
+  // 遍历的持续时间（秒）。
+  int32 elapsed_time = 4;
+}
