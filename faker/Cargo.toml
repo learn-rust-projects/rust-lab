@@ -1,0 +1,8 @@
+[package]
+name = "faker"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+fake = { version = "2.9", features = ["derive"] }
+rand = "0.8"
