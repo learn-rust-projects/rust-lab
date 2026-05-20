@@ -1,0 +1,8 @@
+[package]
+name = "futureutils"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+futures = { version = "0.3", features = ["std", "alloc"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
