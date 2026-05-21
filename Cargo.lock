@@ -1685,6 +1685,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "futureutils"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "tokio",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"

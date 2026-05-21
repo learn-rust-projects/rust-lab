@@ -1,0 +1,4 @@
+[submodule "mvp/template"]
+	path = mvp/template
+	url = https://github.com/learn-rust-projects/template.git
+	branch = master

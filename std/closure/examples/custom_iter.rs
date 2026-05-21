@@ -28,6 +28,7 @@ impl MyIter {
         F: FnMut(i32),
     {
         // 辅助函数：将 FnMut(T) 适配为 fold 需要的 FnMut((), T)
+        // 你使用参数引用，但不能使用局部变量引用
         #[inline]
         fn call<T>(f: &mut impl FnMut(T)) -> impl FnMut((), T) {
             //  move |(), item| f(item) 相当于一个表达式，构建匿名结构体
@@ -166,21 +167,7 @@ where
     f();
 }
 
-// struct Wrapper<'a> {
-//     value: &'a i32,
-// }
-
-// fn bad_ref(value: &i32) -> &Wrapper {
-// Wrapper { value } 是一个未绑定到变量的临时值，表达式：Wrapper { value
-// }结束后会被丢弃     &Wrapper { value }
-// }
-
 fn _call<T>(mut f: impl FnMut(T)) -> impl FnMut((), T) {
-    // >>>>>不move到为什么会报错
-    // 去掉move直接编译错误
-    // 编译错误：生命周期只有函数作用域的可变引用被捕获到作用域中去了
-    // 完整报错信息：closure may outlive the current function, but it borrows `f`,
-    // which is owned by the current function may outlive borrowed value `f`
     move |(), item| f(item)
 }
 
@@ -194,6 +181,8 @@ where
     // move对实现 copy实现了移动语义，&T 实现了copy类型实现copy
     // move 对所有权实现move对&T 实现了copy类型实现copy
     move || {
+        // 你返回了闭包（impl Fn()），闭包会逃离当前函数作用域，因此不能借用当前栈帧里的局部变量。
+        // f: &'a String
         // move occurs because `s` has type `&mut std::string::String`, which does not
         // implement the `Copy` let y = s;
         println!("{}{}", f, s);

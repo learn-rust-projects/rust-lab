@@ -51,6 +51,9 @@ fn downcast_error() -> Result<i32> {
     if let Some(msg) = err.downcast_ref::<&str>() {
         println!("  Caught string error: {}", msg);
     }
+    if let Some(msg) = err.downcast_ref::<String>() {
+        println!("  Caught string error: {}", msg);
+    }
     Ok(42)
 }
 
