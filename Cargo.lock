@@ -1232,6 +1232,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "deref-lab"
+version = "0.1.0"
+
+[[package]]
 name = "derive_builder"
 version = "0.1.0"
 dependencies = [

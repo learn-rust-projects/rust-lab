@@ -58,5 +58,5 @@ members = [
     "serde-lab",
     "time-lab/chrono",
     "projects/url-shortener",
-    "tonic/routeguide", "faker", "async-lab/futureutils", "rocksdb-lab",
+    "tonic/routeguide", "faker", "async-lab/futureutils", "rocksdb-lab", "deref-lab",
 ]
