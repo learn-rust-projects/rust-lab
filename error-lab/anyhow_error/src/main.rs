@@ -106,8 +106,11 @@ fn main() -> Result<()> {
     match check_error_chain() {
         Ok(_) => println!("  Success"),
         Err(e) => {
+            println!("  Tostring : {}", e);
+            println!("========");
             println!("  Error chain: {:?}", e);
-            println!("  Root cause: {}", e.root_cause());
+            println!("========");
+            println!("  Root cause: {:?}", e.root_cause());
         }
     }
 
@@ -118,5 +121,7 @@ fn main() -> Result<()> {
     }
 
     println!("\n=== 完成 ===");
+
+    panic!("出错啦");
     Ok(())
 }

@@ -1,0 +1,40 @@
+# RocksDB Configuration
+# 用于 PlacementCenter 的 RocksDB 配置
+
+# 数据库路径 (必填)
+path: /tmp/rocksdb_data
+
+# 创建选项
+create_if_missing: true
+create_missing_column_families: true
+
+# 文件句柄
+max_open_files: 1000
+
+# 持久化选项
+use_fsync: false  # 警告: 禁用 fsync 会提升性能但增加数据丢失风险
+bytes_per_sync: 8388608  # 8MB
+
+# 缓存配置
+block_cache_size_mb: 1024  # 1GB 点查询缓存
+table_cache_num_shard_bits: 6  # 64 个分片
+
+# 写缓冲区配置
+max_write_buffer_number: 32
+write_buffer_size: 536870912  # 512MB
+min_write_buffer_number_to_merge: 4
+
+# SST 文件配置
+target_file_size_base: 1073741824  # 1GB
+
+# L0 层触发器
+level_zero_stop_writes_trigger: 2000
+level_zero_slowdown_writes_trigger: 0
+
+# 压缩配置
+compaction_style: universal  # universal, level, fifo
+disable_auto_compactions: true  # 警告: 需要手动触发压缩
+
+# Bloom Filter 配置
+prefix_length: 10  # 固定前缀长度 (bytes)
+memtable_prefix_bloom_ratio: 0.2  # 20% 空间用于 Bloom filter
