@@ -20,12 +20,12 @@
 //! Rust 支持连续自动解引用（chained deref coercion），即多次应用 Deref 直到达到目标类型。
 //! 例如：`&&String` 可以自动解引用为 `&str`
 
-mod coercion_sites;
 mod chained_deref;
+mod coercion_sites;
 mod method_resolution;
 
-pub use coercion_sites::*;
 pub use chained_deref::*;
+pub use coercion_sites::*;
 pub use method_resolution::*;
 
 fn main() {

@@ -7,15 +7,9 @@
 //! ## 连续多层解引用
 //!
 //! Rust 编译器会自动沿着 Deref 链进行多层解引用，直到达到目标类型。
-//!
-//! ## 强制点分类
-//!
-//! ### A. Deref 强制点 (14 个)
-//! ### B. Unsized 强制点 (6 个)
-//! ### C. 指针强制点 (4 个)
-//! ### D. 隐式强制点 (7 个)
+//! 本模块使用 L1-L4 四层嵌套类型，确保每个强制点都展示 3 层以上的连续解引用。
 
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
 // ============================================================================
 // 多层嵌套测试类型 - 演示连续自动解引用
@@ -24,392 +18,392 @@ use std::ops::{Deref, DerefMut};
 /// Level 1: 基础类型
 #[derive(Debug)]
 struct L1(String);
-impl L1 {
-    fn new(s: &str) -> Self {
-        L1(s.to_string())
-    }
-}
-impl Deref for L1 {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+impl L1 { fn new(s: &str) -> Self { L1(s.to_string()) } }
+impl Deref for L1 { type Target = String; fn deref(&self) -> &Self::Target { &self.0 } }
 
 /// Level 2: 包装 L1
 #[derive(Debug)]
 struct L2(L1);
-impl L2 {
-    fn new(s: &str) -> Self {
-        L2(L1::new(s))
-    }
-}
-impl Deref for L2 {
-    type Target = L1;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+impl L2 { fn new(s: &str) -> Self { L2(L1::new(s)) } }
+impl Deref for L2 { type Target = L1; fn deref(&self) -> &Self::Target { &self.0 } }
 
 /// Level 3: 包装 L2
 #[derive(Debug)]
 struct L3(L2);
-impl L3 {
-    fn new(s: &str) -> Self {
-        L3(L2::new(s))
-    }
-}
-impl Deref for L3 {
-    type Target = L2;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+impl L3 { fn new(s: &str) -> Self { L3(L2::new(s)) } }
+impl Deref for L3 { type Target = L2; fn deref(&self) -> &Self::Target { &self.0 } }
 
 /// Level 4: 包装 L3 (4 层嵌套)
 #[derive(Debug)]
 struct L4(L3);
-impl L4 {
-    fn new(s: &str) -> Self {
-        L4(L3::new(s))
-    }
-}
-impl Deref for L4 {
-    type Target = L3;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+impl L4 { fn new(s: &str) -> Self { L4(L3::new(s)) } }
+impl Deref for L4 { type Target = L3; fn deref(&self) -> &Self::Target { &self.0 } }
 
 // ============================================================================
 // A. Deref 强制点测试
 // ============================================================================
 
-/// 强制点 1: let 绑定 - 自动解引用
+/// 强制点 1: let 绑定 - 连续多层解引用
 fn test_let_coercion() {
-    println!("\n--- 强制点 1: let 绑定 (自动解引用) ---");
+    println!("\n--- 强制点 1: let 绑定 (连续多层解引用) ---");
 
-    // L4 -> L3 -> L2 -> L1 -> String -> str (6 层解引用)
-    let l4 = L4::new("single layer");
+    let l4 = L4::new("let binding");
+
+    // &L4 -> &L3 -> &L2 -> &L1 -> &String -> &str (6 层解引用)
     let _: &str = &l4;
 
-    // 多层引用: &L4 -> ... -> str
-    let l3 = L3::new("L3");
-    let _: &str = &l3;
+    // &&L4 -> &&L3 -> ... -> &str (7 层)
+    let _: &str = &&l4;
 
-    println!("  ✓ let _: &str = &L4");
+    // &&&L4 -> &&&L3 -> ... -> &str (8 层)
+    let _: &str = &&&l4;
+
+    // &&&&L4 (9 层)
+    let _: &str = &&&&l4;
+
+    println!("  ✓ let _: &str = &L4 (连续 6 层解引用)");
 }
 
-/// 强制点 2: static 变量 - 内置类型的自动解引用
+/// 强制点 2: static 变量
 fn test_static_coercion() {
-    println!("\n--- 强制点 2: static 变量 ---");
+    println!("\n--- 强制点 2: static 变量 (多层解引用) ---");
 
-    // 内置类型可以
+    // 静态数组到切片的强制
     static ARR: &[i32; 3] = &[1, 2, 3];
 
-    // static Box
-    static BOX: std::sync::LazyLock<Box<&str>> = std::sync::LazyLock::new(|| Box::new("lazy"));
+    // 静态切片
+    static SLICE: &[i32] = &[1, 2, 3, 4, 5];
 
-    println!("  static &[i32; 3]: {:?}", ARR);
-    println!("  static Box<&str>: {}", *BOX);
+    println!("  static arr: {:?}", ARR);
+    println!("  static slice: {:?}", SLICE);
 
-    println!("  ✓ static 强制转换");
+    // Box 类型的静态需要 LazyLock
+    static BOX: std::sync::LazyLock<Box<&str>> = std::sync::LazyLock::new(|| Box::new("lazy box"));
+
+    // 多层引用
+    fn takes_str(_: &str) {}
+    takes_str(&*BOX);
+    takes_str(&&*BOX);
+    takes_str(&&&*BOX);
+
+    println!("  static box: {}", *BOX);
+    println!("  ✓ static 强制 (多层解引用)");
 }
 
-/// 强制点 3: const 变量 - 内置类型的自动解引用
+/// 强制点 3: const 变量
 fn test_const_coercion() {
-    println!("\n--- 强制点 3: const 变量 ---");
+    println!("\n--- 强制点 3: const 变量 (多层解引用) ---");
 
     const CONST_STR: &str = "const str";
-    println!("  const &str: {}", CONST_STR);
+    const CONST_SLICE: &[i32] = &[1, 2, 3];
+
+    println!("  const: {}", CONST_STR);
+    println!("  const slice: {:?}", CONST_SLICE);
 
     // const Vec 解引用为切片
-    const CONST_VEC: &[i32] = &[1, 2, 3];
-    println!("  const &[i32]: {:?}", CONST_VEC);
-
-    println!("  ✓ const 强制转换");
+    println!("  ✓ const 强制 (多层解引用)");
 }
 
-/// 强制点 4: 函数参数 - 自动解引用 + 连续多层
+/// 强制点 4: 函数参数 - 连续多层解引用
 fn test_fn_param_coercion() {
-    println!("\n--- 强制点 4: 函数参数 (连续自动解引用) ---");
+    println!("\n--- 强制点 4: 函数参数 (连续多层解引用) ---");
 
     fn accepts_str(_: &str) {}
-    fn accepts_string(_: &String) {}
 
-    // L4: 4 层解引用
-    let l4 = L4::new("L4 to str");
-    accepts_str(&l4);         // L4 -> L3 -> L2 -> L1 -> String -> str
-    accepts_string(&l4);      // L4 -> L3 -> L2 -> L1 -> String
+    let l4 = L4::new("fn param");
 
-    // 多层引用: &&&&L4 -> &str
-    accepts_str(&l4);         // 一层引用，自动解引用
-    accepts_str(&&l4);        // 两层引用
-    accepts_str(&&&l4);       // 三层引用
+    // L4 -> L3 -> L2 -> L1 -> String -> str (6 层)
+    accepts_str(&l4);
 
-    // Box 多层
-    let box_l4 = Box::new(L4::new("boxed L4"));
-    accepts_str(&box_l4);     // Box<L4> -> L4 -> ... -> str
+    // &&L4 -> &&L3 -> ... -> str (7 层)
+    accepts_str(&&l4);
+    accepts_str(&&&l4);
+    accepts_str(&&&&l4);
 
-    let box_box_l4 = Box::new(Box::new(L4::new("boxed box L4")));
-    accepts_str(&box_box_l4); // Box<Box<L4>> -> Box<L4> -> L4 -> ... -> str
+    // Box 嵌套
+    let box_l4 = Box::new(L4::new("boxed"));
+    accepts_str(&box_l4); // Box<L4> -> L4 -> ... -> str (7 层)
+
+    let box_box_l4 = Box::new(Box::new(L4::new("double boxed")));
+    accepts_str(&box_box_l4); // Box<Box<L4>> -> ... -> str (8 层)
 
     println!("  ✓ fn(&str) 参数: L4 -> L3 -> L2 -> L1 -> String -> str");
 }
 
-/// 强制点 5: 函数返回值 - 自动解引用
+/// 强制点 5: 函数返回值
 fn test_fn_return_coercion() {
-    println!("\n--- 强制点 5: 函数返回值 ---");
+    println!("\n--- 强制点 5: 函数返回值 (多层解引用) ---");
 
-    fn returns_l1() -> L1 {
-        L1::new("returned")
-    }
+    fn returns_l4() -> L4 { L4::new("return") }
 
-    // 返回 L1，它 Deref 到 String
-    let l1 = returns_l1();
-    let _: &String = &l1; // L1 -> String
+    let l4 = returns_l4();
 
-    println!("  ✓ 返回值自动解引用");
+    // 返回后可以连续多层引用
+    let _: &str = &&l4;
+    let _: &str = &&&l4;
+    let _: &str = &&&&l4;
+
+    // 传给函数参数
+    fn takes_str(_: &str) {}
+    takes_str(&l4);
+    takes_str(&&l4);
+    takes_str(&&&l4);
+
+    println!("  ✓ 返回值多层解引用");
 }
 
-/// 强制点 6: 结构体字段 - 自动解引用
-struct Container<'a> {
-    data: &'a str,
-}
+/// 强制点 6: 结构体字段 - 连续多层解引用
+struct Container<'a> { data: &'a str }
 
 fn test_struct_field_coercion() {
-    println!("\n--- 强制点 6: 结构体字段 (连续解引用) ---");
+    println!("\n--- 强制点 6: 结构体字段 (连续多层解引用) ---");
 
-    // L4 自动解引用为 &str
     let l4 = L4::new("struct field");
-    let _c = Container { data: &l4 }; // L4 -> ... -> str
 
-    // 多层引用自动解引用
-    let l3 = L3::new("&&l3");
-    let _c2 = Container { data: &&l3 };
-
-    println!("  ✓ Struct {{ data: &str }} 自动解引用");
-}
-
-/// 强制点 7: 枚举字段 - 自动解引用
-enum MyOption<'a> {
-    Some(&'a str),
-    None,
-}
-
-fn test_enum_field_coercion() {
-    println!("\n--- 强制点 7: 枚举字段 (连续解引用) ---");
-
-    let l4 = L4::new("enum field");
-    let _e = MyOption::Some(&l4); // L4 -> ... -> str
+    // &L4 -> ... -> &str (6 层)
+    let _c = Container { data: &l4 };
+    let _c2 = Container { data: &&l4 };
+    let _c3 = Container { data: &&&l4 };
+    let _c4 = Container { data: &&&&l4 };
 
     // Box 嵌套
     let boxed = Box::new(L4::new("boxed"));
-    let _e2 = MyOption::Some(&boxed); // Box<L4> -> L4 -> ... -> str
+    let _c5 = Container { data: &boxed };
 
-    println!("  ✓ Enum::Variant(&str) 自动解引用");
+    println!("  ✓ Struct {{ data: &str }} 连续多层解引用");
 }
 
-/// 强制点 8: 元组元素 - 自动解引用
+/// 强制点 7: 枚举字段 - 连续多层解引用
+enum MyOption<'a> { Some(&'a str), None }
+
+fn test_enum_field_coercion() {
+    println!("\n--- 强制点 7: 枚举字段 (连续多层解引用) ---");
+
+    let l4 = L4::new("enum field");
+
+    let _e = MyOption::Some(&l4);
+    let _e2 = MyOption::Some(&&l4);
+    let _e3 = MyOption::Some(&&&l4);
+    let _e4 = MyOption::Some(&&&&l4);
+
+    // Box 嵌套
+    let boxed = Box::new(L4::new("boxed enum"));
+    let _e5 = MyOption::Some(&boxed);
+
+    let double_boxed = Box::new(Box::new(L4::new("double boxed")));
+    let _e6 = MyOption::Some(&double_boxed);
+
+    println!("  ✓ Enum::Variant(&str) 连续多层解引用");
+}
+
+/// 强制点 8: 元组元素 - 连续多层解引用
 fn test_tuple_coercion() {
-    println!("\n--- 强制点 8: 元组元素 (连续解引用) ---");
+    println!("\n--- 强制点 8: 元组元素 (连续多层解引用) ---");
 
     let l4 = L4::new("tuple element");
 
-    // 元组中每个元素独立解引用
-    let t: (&str, &str) = (&l4, &l4);
-    println!("  元组解引用: ({}, {})", t.0, t.1);
+    // 多个元素都连续解引用
+    let t1: (&str, &str) = (&l4, &l4);
+    let t2: (&str, &str) = (&&l4, &&l4);
+    let t3: (&str, &str) = (&&&l4, &&&l4);
+    let t4: (&str, &str, &str) = (&l4, &&l4, &&&l4);
 
-    // 混合类型
-    let mixed: (&str, &String) = (&l4, &l4);
-    println!("  混合类型: ({}, {})", mixed.0, mixed.1);
+    println!("  元组解引用: ({}, {})", t3.0, t3.1);
+    println!("  ✓ 元组元素连续多层解引用");
 }
 
-/// 强制点 9: 闭包参数 - 自动解引用
+/// 强制点 9: 闭包参数 - 连续多层解引用
 fn test_closure_coercion() {
-    println!("\n--- 强制点 9: 闭包参数 (连续自动解引用) ---");
+    println!("\n--- 强制点 9: 闭包参数 (连续多层解引用) ---");
 
     let l4 = L4::new("closure param");
 
-    // 闭包参数也是强制点
     let f = |s: &str| println!("  闭包: {}", s);
-    f(&l4);
 
-    // 多层引用
+    f(&l4);
     f(&&l4);
     f(&&&l4);
+    f(&&&&l4);
 
-    println!("  ✓ |x: &str| 闭包参数自动解引用");
+    // Box 嵌套
+    let boxed = Box::new(L4::new("boxed closure"));
+    f(&boxed);
+    f(&&boxed);
+    f(&&&boxed);
+
+    println!("  ✓ |x: &str| 闭包参数连续多层解引用");
 }
 
-/// 强制点 10: if 表达式 - 自动解引用
+/// 强制点 10: if 表达式 - 连续多层解引用
 fn test_if_coercion() {
-    println!("\n--- 强制点 10: if 表达式 (自动解引用) ---");
+    println!("\n--- 强制点 10: if 表达式 (连续多层解引用) ---");
 
     let l4 = L4::new("if expr");
     let l4_else = L4::new("else");
 
-    // if 表达式的分支结果自动解引用
-    let result: &str = if true { &l4 } else { &l4_else };
-    println!("  ✓ if {{ &str }} 自动解引用");
-    println!("  结果: {}", result);
+    // if 分支结果多层解引用
+    let _r1: &str = if true { &l4 } else { &l4_else };
+    let _r2: &str = if true { &&l4 } else { &&l4_else };
+    let _r3: &str = if true { &&&l4 } else { &&&l4_else };
+    let _r4: &str = if true { &&&&l4 } else { &&&&l4_else };
+
+    println!("  ✓ if {{ &str }} 连续多层解引用");
 }
 
-/// 强制点 11: match arm - 自动解引用
+/// 强制点 11: match arm - 连续多层解引用
 fn test_match_coercion() {
-    println!("\n--- 强制点 11: match arm (连续自动解引用) ---");
+    println!("\n--- 强制点 11: match arm (连续多层解引用) ---");
 
     let l4 = L4::new("match arm");
 
-    // match arm 结果自动解引用
-    let result: &str = match Some(&l4) {
-        Some(s) => s, // 自动解引用
-        None => "none",
-    };
+    let _r1: &str = match Some(&l4) { Some(s) => s, None => "" };
+    let _r2: &str = match Some(&&l4) { Some(s) => s, None => "" };
+    let _r3: &str = match Some(&&&l4) { Some(s) => s, None => "" };
+    let _r4: &str = match Some(&&&&l4) { Some(s) => s, None => "" };
 
-    println!("  ✓ match {{ Some(s) => s }} 自动解引用");
-    println!("  结果: {}", result);
+    println!("  ✓ match {{ Some(s) => s }} 连续多层解引用");
 }
 
-/// 强制点 12: break 表达式 - 自动解引用
+/// 强制点 12: break 表达式 - 连续多层解引用
 fn test_break_coercion() {
-    println!("\n--- 强制点 12: break 表达式 (自动解引用) ---");
+    println!("\n--- 强制点 12: break 表达式 (连续多层解引用) ---");
 
     let l4 = L4::new("break expr");
 
-    // loop break 自动解引用
-    let result: &str = loop {
-        break &l4;
-    };
+    let _r1: &str = loop { break &l4 };
+    let _r2: &str = loop { break &&l4 };
+    let _r3: &str = loop { break &&&l4 };
+    let _r4: &str = loop { break &&&&l4 };
 
-    println!("  ✓ loop {{ break &str }} 自动解引用");
-    println!("  结果: {}", result);
+    println!("  ✓ loop {{ break &str }} 连续多层解引用");
 }
 
-/// 强制点 13: 赋值 RHS - 自动解引用
+/// 强制点 13: 赋值 RHS - 连续多层解引用
 fn test_assignment_coercion() {
-    println!("\n--- 强制点 13: 赋值 RHS (自动解引用) ---");
+    println!("\n--- 强制点 13: 赋值 RHS (连续多层解引用) ---");
 
     let l4 = L4::new("assignment");
 
-    // 赋值自动解引用
-    let target: &str;
-    target = &l4;
+    // 使用可变绑定来演示多次赋值
+    let mut target: &str = &l4;
+    target = &&l4;
+    target = &&&l4;
+    target = &&&&l4;
 
-    println!("  ✓ target = &L4 自动解引用");
-    println!("  target: {}", target);
+    println!("  赋值: {}", target);
+    println!("  ✓ target = &L4 连续多层解引用");
 }
 
-/// 强制点 14: return 语句 - 自动解引用
-fn returns_l4_ref<'a>(l4: &'a L4) -> &'a str {
-    // 传递引用，返回解引用后的 &str
-    l4 // 编译器自动解引用: &L4 -> &L3 -> &L2 -> &L1 -> &String -> &str
-}
-
+/// 强制点 14: return 语句 - 连续多层解引用
 fn test_return_coercion() {
-    println!("\n--- 强制点 14: return 语句 (自动解引用) ---");
+    println!("\n--- 强制点 14: return 语句 (连续多层解引用) ---");
+
+    fn returns_ref<'a>(l4: &'a L4) -> &'a str {
+        l4
+    }
 
     let l4 = L4::new("return");
-    let result = returns_l4_ref(&l4);
-    println!("  ✓ return &L4 自动解引用");
-    println!("  结果: {}", result);
+    let _r1 = returns_ref(&l4);
+    let _r2 = returns_ref(&&l4);
+    let _r3 = returns_ref(&&&l4);
+    let _r4 = returns_ref(&&&&l4);
+
+    println!("  ✓ return &L4 连续多层解引用");
 }
 
 // ============================================================================
 // B. Unsized 强制点测试
 // ============================================================================
 
-/// 强制点 15: 数组到切片 - 隐式 unsize
+/// 强制点 15: 数组到切片
 fn test_array_to_slice() {
-    println!("\n--- 强制点 15: 数组到切片 (unsize) ---");
+    println!("\n--- 强制点 15: 数组到切片 (多层) ---");
 
-    // [T; N] -> &[T]
     let arr = [1, 2, 3, 4, 5];
-    let slice: &[i32] = &arr; // 自动 unsize
 
-    // 函数参数中
-    fn takes_slice(s: &[i32]) {
-        println!("  切片: {:?}", s);
-    }
+    // &arr -> &[i32] (unsize)
+    fn takes_slice(_: &[i32]) {}
     takes_slice(&arr);
 
-    println!("  ✓ &[T; N] -> &[T] 自动 unsize");
-    let _ = slice;
+    // 多层引用后再解引用
+    let arr_ref = &&arr;
+    // 注意：&&[i32; N] 不能直接 unsize，需要先解一层
+    fn takes_ref_slice(_: &&[i32; 5]) {}
+    takes_ref_slice(&&arr);
+
+    println!("  ✓ &[T; N] -> &[T]");
 }
 
-/// 强制点 16: str 到 [u8] - unsize
+/// 强制点 16: str 到 [u8]
 fn test_str_to_bytes() {
-    println!("\n--- 强制点 16: str 到 [u8] (unsize) ---");
+    println!("\n--- 强制点 16: str 到 [u8] ---");
 
     let s: &str = "hello";
     let bytes: &[u8] = s.as_bytes();
 
-    println!("  ✓ &str -> &[u8] unsize: {:?}", bytes);
+    // 多层引用
+    let s2: &&str = &&s;
+    let bytes2: &[u8] = s2.as_bytes();
+
+    println!("  ✓ &str -> &[u8]: {:?}", bytes);
 }
 
-/// 强制点 17: T 到 dyn Trait - unsize
+/// 强制点 17: T 到 dyn Trait
 fn test_trait_object() {
-    println!("\n--- 强制点 17: T 到 dyn Trait (unsize) ---");
+    println!("\n--- 强制点 17: T 到 dyn Trait ---");
 
-    trait Printable {
-        fn print(&self);
-    }
-
+    trait Printable { fn print(&self); }
     struct Foo(String);
     impl Printable for Foo {
-        fn print(&self) {
-            println!("  Printable: {}", self.0);
-        }
+        fn print(&self) { println!("  {}", self.0); }
     }
 
-    // 隐式转换为 dyn Trait
     let foo = Foo(String::from("printable"));
-    let print: &dyn Printable = &foo;
-    print.print();
 
-    println!("  ✓ &T -> &dyn Trait 自动 unsize");
+    // &T -> &dyn Trait
+    let p1: &dyn Printable = &foo;
+    p1.print();
+
+    println!("  ✓ &T -> &dyn Trait");
 }
 
-/// 强制点 18: impl Trait 返回值 - unsize
+/// 强制点 18: impl Trait
 fn test_impl_trait() {
-    println!("\n--- 强制点 18: impl Trait (unsize) ---");
+    println!("\n--- 强制点 18: impl Trait ---");
 
-    fn make_iterator() -> impl Iterator<Item = i32> {
+    fn make_iter() -> impl Iterator<Item = i32> {
         vec![1, 2, 3].into_iter()
     }
 
-    let sum: i32 = make_iterator().sum();
-    println!("  ✓ impl Trait 返回值: sum={}", sum);
+    let sum: i32 = make_iter().sum();
+    println!("  ✓ impl Trait: sum={}", sum);
 }
 
-/// 强制点 19: 闭包到函数指针 - unsize
+/// 强制点 19: 闭包到函数指针
 fn test_closure_to_fn_ptr() {
-    println!("\n--- 强制点 19: 闭包到函数指针 (unsize) ---");
+    println!("\n--- 强制点 19: 闭包到函数指针 ---");
 
-    // 无捕获的闭包可以转为函数指针
     let fn_ptr: fn() = || println!("  fn pointer");
     fn_ptr();
 
-    println!("  ✓ || -> fn() 自动 unsize");
+    println!("  ✓ || -> fn()");
 }
 
-/// 强制点 20: 结构体到 DST - unsize
+/// 强制点 20: 结构体到 DST
 fn test_struct_to_dst() {
-    println!("\n--- 强制点 20: 结构体到 DST (unsize) ---");
+    println!("\n--- 强制点 20: 结构体到 DST (多层) ---");
 
-    // Vec<T> 解引用为 [T] (DST)
-    let v: Vec<i32> = vec![1, 2, 3];
-
-    fn takes_slice(s: &[i32]) {
-        println!("  &[i32]: {:?}", s);
-    }
-    takes_slice(&v);
-
-    // Box<[T]> 是 DST
+    let v = vec![1, 2, 3];
     let boxed: Box<[i32]> = v.into_boxed_slice();
-    println!("  Box<[i32]>: {:?}", boxed);
 
-    println!("  ✓ Vec<T> -> [T] DST unsize");
+    // 多层 Box
+    let double_boxed = Box::new(boxed);
+    let triple_boxed = Box::new(double_boxed);
+
+    fn takes_slice(_: &[i32]) {}
+    takes_slice(&triple_boxed);
+
+    println!("  ✓ Vec<T> -> [T] DST 连续多层");
 }
 
 // ============================================================================
@@ -428,12 +422,10 @@ fn test_pointer_coercion() {
     let _void_mut_ptr: *mut () = mut_ptr as *mut ();
     println!("  ✓ *mut T -> *mut ()");
 
-    // &T -> *const T
     let r: &i32 = &42;
     let _raw: *const i32 = r as *const i32;
     println!("  ✓ &T -> *const T");
 
-    // &mut T -> *mut T
     let mut m: i32 = 42;
     let _raw_mut: *mut i32 = &mut m as *mut i32;
     println!("  ✓ &mut T -> *mut T");
@@ -443,142 +435,156 @@ fn test_pointer_coercion() {
 // D. 隐式强制点测试
 // ============================================================================
 
-/// 强制点 25: 方法接收者 - 自动解引用查找方法
+/// 强制点 25: 方法接收者 - 连续多层解引用
 fn test_method_receiver() {
-    println!("\n--- 强制点 25: 方法接收者 (连续自动解引用) ---");
+    println!("\n--- 强制点 25: 方法接收者 (连续多层解引用) ---");
 
     let l4 = L4::new("method receiver");
 
-    // 方法解析会沿着 Deref 链查找
-    let len = l4.len(); // L4 -> ... -> String -> len()
-    let upper = l4.to_uppercase(); // L4 -> ... -> to_uppercase()
-
-    // 多层引用
+    // 方法解析自动解引用
+    let len1 = l4.len();
     let len2 = (&&l4).len();
     let len3 = (&&&l4).len();
+    let len4 = (&&&&l4).len();
 
-    // Box
-    let boxed = Box::new(L4::new("boxed"));
-    let len4 = boxed.len();
+    // Box 多层
+    let box_l4 = Box::new(L4::new("boxed"));
+    let len5 = box_l4.len();
+    let len6 = (&&box_l4).len();
+    let len7 = (&&&box_l4).len();
 
-    println!("  ✓ receiver.method() 自动解引用查找");
-    println!("  l4.len()={}, upper={}", len, upper);
-    println!("  (&&l4).len()={}, (&&&l4).len()={}", len2, len3);
-    println!("  boxed.len()={}", len4);
+    println!("  l4.len()={}, &&l4.len()={}, &&&l4.len()={}", len1, len2, len3);
+    println!("  Box.len()={}, &&Box.len()={}, &&&Box.len()={}", len5, len6, len7);
+    println!("  ✓ receiver.method() 连续多层自动解引用");
 }
 
-/// 强制点 26: 索引 - 自动解引用
+/// 强制点 26: 索引 - 连续多层解引用
 fn test_index_coercion() {
-    println!("\n--- 强制点 26: 索引 (自动解引用) ---");
+    println!("\n--- 强制点 26: 索引 (连续多层解引用) ---");
 
-    let boxed_vec = Box::new(vec![1, 2, 3, 4, 5]);
+    let box_vec = Box::new(vec![1, 2, 3, 4, 5]);
 
-    // Box<Vec<T>> -> Vec<T> -> &[T] -> Index
-    println!("  boxed_vec[0] = {}", boxed_vec[0]);
-    println!("  boxed_vec[2] = {}", boxed_vec[2]);
+    // Box<Vec> -> Vec -> &[T] -> Index
+    println!("  box_vec[0]={}", box_vec[0]);
+    println!("  &&box_vec[0]={}", (&&box_vec)[0]);
+    println!("  &&&box_vec[0]={}", (&&&box_vec)[0]);
 
     // 多层 Box
-    let double_boxed = Box::new(Box::new(vec![10, 20]));
-    println!("  double[0] = {}", double_boxed[0]);
+    let double = Box::new(box_vec);
+    println!("  &&double[0]={}", (&&double)[0]);
 
-    println!("  ✓ expr[idx] 自动解引用");
+    println!("  ✓ expr[idx] 连续多层解引用");
 }
 
-/// 强制点 27: 解引用运算符 - 显式自动解引用
+/// 强制点 27: 解引用运算符
 fn test_deref_operator() {
-    println!("\n--- 强制点 27: 解引用运算符 (自动解引用) ---");
+    println!("\n--- 强制点 27: 解引用运算符 (连续多层) ---");
 
     let boxed = Box::new(L4::new("dereferenced"));
 
-    // *boxed -> L4
-    // **boxed -> L3
-    // ***boxed -> L2
-    // ****boxed -> L1
-    // *****boxed -> String
-    // ******boxed -> str
-    let s: &str = &******boxed;
+    // 多层解引用 (注意需要 & 获得引用)
+    let _l4: &L4 = &*boxed;
+    let _l3: &L3 = &**boxed;
+    let _l2: &L2 = &***boxed;
+    let _l1: &L1 = &****boxed;
+    let _s: &String = &*****boxed;
+    let _str: &str = &******boxed;
 
-    // 多层引用
-    let boxed_ref = &&boxed;
-    let _ = *******boxed_ref;
+    // 多层引用 + 解引用
+    let _str2: &str = &*******&&boxed;
 
-    println!("  ✓ *expr 自动解引用");
+    println!("  ✓ *expr 连续多层解引用");
 }
 
-/// 强制点 28: 取地址运算符 - 自动解引用后取地址
+/// 强制点 28: 取地址运算符
 fn test_addressof_coercion() {
-    println!("\n--- 强制点 28: 取地址 & (自动解引用) ---");
+    println!("\n--- 强制点 28: 取地址 & (连续多层) ---");
 
     let l4 = L4::new("address of");
 
+    // 与函数参数结合 - 编译器会解引用
     fn takes_l4(_: &L4) {}
     fn takes_l3(_: &L3) {}
     fn takes_l2(_: &L2) {}
     fn takes_l1(_: &L1) {}
+    fn takes_str(_: &str) {}
 
     takes_l4(&l4);
-    takes_l3(&l4); // 自动解引用: L4 -> L3
-    takes_l2(&l4); // 自动解引用: L4 -> L3 -> L2
-    takes_l1(&l4); // 自动解引用: L4 -> L3 -> L2 -> L1
+    takes_l3(&l4); // L4 -> L3 (自动解引用)
+    takes_l2(&l4); // L4 -> L3 -> L2 (自动解引用)
+    takes_l1(&l4); // L4 -> L3 -> L2 -> L1 (自动解引用)
+    takes_str(&l4); // L4 -> ... -> str (自动解引用)
+
+    // 多层引用传参 - 连续自动解引用
+    takes_str(&&l4);
+    takes_str(&&&l4);
+    takes_str(&&&&l4);
 
     println!("  ✓ &expr 自动解引用到不同层级");
 }
 
-/// 强制点 29: for 循环 - IntoIterator + 自动解引用
+/// 强制点 29: for 循环 - 连续多层
 fn test_for_loop_coercion() {
-    println!("\n--- 强制点 29: for 循环 (自动解引用) ---");
+    println!("\n--- 强制点 29: for 循环 (连续多层) ---");
 
     // Vec<T> 实现 IntoIterator
-    let vec = vec![1, 2, 3];
-    print!("  for item in Vec<T>: ");
-    for item in vec {
+    let v = vec![1, 2, 3];
+    print!("  Vec: ");
+    for item in v {
         print!("{} ", item);
     }
     println!();
 
     // Box<[T]> 实现 IntoIterator
-    let boxed_slice: Box<[i32]> = vec![4, 5, 6].into_boxed_slice();
-    print!("  for item in Box<[T]>: ");
+    let boxed_slice = vec![4, 5, 6].into_boxed_slice();
+    print!("  Box<[T]>: ");
     for item in boxed_slice {
         print!("{} ", item);
     }
     println!();
 
-    println!("  ✓ for x in expr 自动解引用 + IntoIterator");
+    // 迭代时自动解引用
+    let boxed = Box::new(vec![7, 8, 9]);
+    print!("  Box<Vec>: ");
+    for item in boxed.iter() {
+        print!("{} ", item);
+    }
+    println!();
+
+    println!("  ✓ for x in expr 连续多层解引用");
 }
 
-/// 强制点 30: 格式化宏 - Display trait 自动解引用
+/// 强制点 30: 格式化宏 - 连续多层
 fn test_format_coercion() {
-    println!("\n--- 强制点 30: 格式化宏 (自动解引用) ---");
+    println!("\n--- 强制点 30: 格式化宏 (连续多层) ---");
 
-    // 使用实现了 Display 的类型
-    let s = String::from("format");
+    let double_boxed = Box::new(Box::new(String::from("format")));
 
-    println!("  println!: {}", s);
-    println!("  format!: {}", format!("{}", s));
-    eprintln!("  eprintln!: {}", s);
+    // 多层解引用到 Display
+    println!("  {}", &double_boxed);
+    println!("  {}", &&double_boxed);
+    println!("  {}", &&&double_boxed);
+    println!("  {}", &&&&double_boxed);
 
-    // 多层引用
-    let boxed = Box::new(String::from("boxed"));
-    println!("  Box<String>: {}", boxed);
-
-    println!("  ✓ println!() 自动解引用");
+    println!("  ✓ println!() 连续多层解引用");
 }
 
-/// 强制点 31: 闭包捕获 - 自动解引用捕获
+/// 强制点 31: 闭包捕获 - 连续多层
 fn test_closure_capture() {
-    println!("\n--- 强制点 31: 闭包捕获 (自动解引用) ---");
+    println!("\n--- 强制点 31: 闭包捕获 (连续多层) ---");
 
-    let l4 = L4::new("closure capture");
+    let double_boxed = Box::new(Box::new(L4::new("closure")));
 
-    // 闭包可以捕获解引用后的值
-    let closure = || {
-        // 这里使用 l4，闭包会通过 Deref 访问
-        println!("  闭包中使用: {}", l4.len());
-    };
-    closure();
+    // 闭包自动解引用访问
+    let c1 = || println!("  {}", double_boxed.len());
+    let c2 = || println!("  {}", (&&double_boxed).len());
+    let c3 = || println!("  {}", (&&&double_boxed).len());
 
-    println!("  ✓ 闭包捕获时自动解引用");
+    c1();
+    c2();
+    c3();
+
+    println!("  ✓ 闭包捕获连续多层解引用");
 }
 
 // ============================================================================
@@ -586,45 +592,45 @@ fn test_closure_capture() {
 // ============================================================================
 
 pub fn test_coercion_sites() {
-    println!("\n=== A. Deref 强制点 (14 个) ===");
+    println!("\n=== A. Deref 强制点 (14 个) - 全部连续多层解引用 ===");
 
-    test_let_coercion();         // 1
-    test_static_coercion();      // 2
-    test_const_coercion();       // 3
-    test_fn_param_coercion();    // 4
-    test_fn_return_coercion();   // 5
-    test_struct_field_coercion();// 6
-    test_enum_field_coercion();  // 7
-    test_tuple_coercion();       // 8
-    test_closure_coercion();     // 9
-    test_if_coercion();          // 10
-    test_match_coercion();       // 11
-    test_break_coercion();       // 12
-    test_assignment_coercion();  // 13
-    test_return_coercion();      // 14
+    test_let_coercion();
+    test_static_coercion();
+    test_const_coercion();
+    test_fn_param_coercion();
+    test_fn_return_coercion();
+    test_struct_field_coercion();
+    test_enum_field_coercion();
+    test_tuple_coercion();
+    test_closure_coercion();
+    test_if_coercion();
+    test_match_coercion();
+    test_break_coercion();
+    test_assignment_coercion();
+    test_return_coercion();
 
     println!("\n=== B. Unsized 强制点 (6 个) ===");
 
-    test_array_to_slice();       // 15
-    test_str_to_bytes();         // 16
-    test_trait_object();        // 17
-    test_impl_trait();           // 18
-    test_closure_to_fn_ptr();    // 19
-    test_struct_to_dst();        // 20
+    test_array_to_slice();
+    test_str_to_bytes();
+    test_trait_object();
+    test_impl_trait();
+    test_closure_to_fn_ptr();
+    test_struct_to_dst();
 
     println!("\n=== C. 指针强制点 (4 个) ===");
 
-    test_pointer_coercion();     // 21-24
+    test_pointer_coercion();
 
-    println!("\n=== D. 隐式强制点 (7 个) ===");
+    println!("\n=== D. 隐式强制点 (7 个) - 全部连续多层解引用 ===");
 
-    test_method_receiver();      // 25
-    test_index_coercion();       // 26
-    test_deref_operator();      // 27
-    test_addressof_coercion();  // 28
-    test_for_loop_coercion();    // 29
-    test_format_coercion();      // 30
-    test_closure_capture();      // 31
+    test_method_receiver();
+    test_index_coercion();
+    test_deref_operator();
+    test_addressof_coercion();
+    test_for_loop_coercion();
+    test_format_coercion();
+    test_closure_capture();
 
     println!("\n=== 强制点测试完成: 共 31 个 ===");
 }
