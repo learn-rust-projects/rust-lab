@@ -18,26 +18,62 @@ use std::ops::Deref;
 /// Level 1: 基础类型
 #[derive(Debug)]
 struct L1(String);
-impl L1 { fn new(s: &str) -> Self { L1(s.to_string()) } }
-impl Deref for L1 { type Target = String; fn deref(&self) -> &Self::Target { &self.0 } }
+impl L1 {
+    fn new(s: &str) -> Self {
+        L1(s.to_string())
+    }
+}
+impl Deref for L1 {
+    type Target = String;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// Level 2: 包装 L1
 #[derive(Debug)]
 struct L2(L1);
-impl L2 { fn new(s: &str) -> Self { L2(L1::new(s)) } }
-impl Deref for L2 { type Target = L1; fn deref(&self) -> &Self::Target { &self.0 } }
+impl L2 {
+    fn new(s: &str) -> Self {
+        L2(L1::new(s))
+    }
+}
+impl Deref for L2 {
+    type Target = L1;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// Level 3: 包装 L2
 #[derive(Debug)]
 struct L3(L2);
-impl L3 { fn new(s: &str) -> Self { L3(L2::new(s)) } }
-impl Deref for L3 { type Target = L2; fn deref(&self) -> &Self::Target { &self.0 } }
+impl L3 {
+    fn new(s: &str) -> Self {
+        L3(L2::new(s))
+    }
+}
+impl Deref for L3 {
+    type Target = L2;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// Level 4: 包装 L3 (4 层嵌套)
 #[derive(Debug)]
 struct L4(L3);
-impl L4 { fn new(s: &str) -> Self { L4(L3::new(s)) } }
-impl Deref for L4 { type Target = L3; fn deref(&self) -> &Self::Target { &self.0 } }
+impl L4 {
+    fn new(s: &str) -> Self {
+        L4(L3::new(s))
+    }
+}
+impl Deref for L4 {
+    type Target = L3;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 // ============================================================================
 // A. Deref 强制点测试
@@ -134,7 +170,9 @@ fn test_fn_param_coercion() {
 fn test_fn_return_coercion() {
     println!("\n--- 强制点 5: 函数返回值 (多层解引用) ---");
 
-    fn returns_l4() -> L4 { L4::new("return") }
+    fn returns_l4() -> L4 {
+        L4::new("return")
+    }
 
     let l4 = returns_l4();
 
@@ -153,7 +191,9 @@ fn test_fn_return_coercion() {
 }
 
 /// 强制点 6: 结构体字段 - 连续多层解引用
-struct Container<'a> { data: &'a str }
+struct Container<'a> {
+    data: &'a str,
+}
 
 fn test_struct_field_coercion() {
     println!("\n--- 强制点 6: 结构体字段 (连续多层解引用) ---");
@@ -174,7 +214,10 @@ fn test_struct_field_coercion() {
 }
 
 /// 强制点 7: 枚举字段 - 连续多层解引用
-enum MyOption<'a> { Some(&'a str), None }
+enum MyOption<'a> {
+    Some(&'a str),
+    None,
+}
 
 fn test_enum_field_coercion() {
     println!("\n--- 强制点 7: 枚举字段 (连续多层解引用) ---");
@@ -256,10 +299,22 @@ fn test_match_coercion() {
 
     let l4 = L4::new("match arm");
 
-    let _r1: &str = match Some(&l4) { Some(s) => s, None => "" };
-    let _r2: &str = match Some(&&l4) { Some(s) => s, None => "" };
-    let _r3: &str = match Some(&&&l4) { Some(s) => s, None => "" };
-    let _r4: &str = match Some(&&&&l4) { Some(s) => s, None => "" };
+    let _r1: &str = match Some(&l4) {
+        Some(s) => s,
+        None => "",
+    };
+    let _r2: &str = match Some(&&l4) {
+        Some(s) => s,
+        None => "",
+    };
+    let _r3: &str = match Some(&&&l4) {
+        Some(s) => s,
+        None => "",
+    };
+    let _r4: &str = match Some(&&&&l4) {
+        Some(s) => s,
+        None => "",
+    };
 
     println!("  ✓ match {{ Some(s) => s }} 连续多层解引用");
 }
@@ -270,10 +325,18 @@ fn test_break_coercion() {
 
     let l4 = L4::new("break expr");
 
-    let _r1: &str = loop { break &l4 };
-    let _r2: &str = loop { break &&l4 };
-    let _r3: &str = loop { break &&&l4 };
-    let _r4: &str = loop { break &&&&l4 };
+    let _r1: &str = loop {
+        break &l4;
+    };
+    let _r2: &str = loop {
+        break &&l4;
+    };
+    let _r3: &str = loop {
+        break &&&l4;
+    };
+    let _r4: &str = loop {
+        break &&&&l4;
+    };
 
     println!("  ✓ loop {{ break &str }} 连续多层解引用");
 }
@@ -352,10 +415,14 @@ fn test_str_to_bytes() {
 fn test_trait_object() {
     println!("\n--- 强制点 17: T 到 dyn Trait ---");
 
-    trait Printable { fn print(&self); }
+    trait Printable {
+        fn print(&self);
+    }
     struct Foo(String);
     impl Printable for Foo {
-        fn print(&self) { println!("  {}", self.0); }
+        fn print(&self) {
+            println!("  {}", self.0);
+        }
     }
 
     let foo = Foo(String::from("printable"));
@@ -374,7 +441,6 @@ fn test_impl_trait() {
     fn make_iter() -> impl Iterator<Item = i32> {
         vec![1, 2, 3].into_iter()
     }
-
     let sum: i32 = make_iter().sum();
     println!("  ✓ impl Trait: sum={}", sum);
 }
@@ -453,8 +519,14 @@ fn test_method_receiver() {
     let len6 = (&&box_l4).len();
     let len7 = (&&&box_l4).len();
 
-    println!("  l4.len()={}, &&l4.len()={}, &&&l4.len()={}", len1, len2, len3);
-    println!("  Box.len()={}, &&Box.len()={}, &&&Box.len()={}", len5, len6, len7);
+    println!(
+        "  l4.len()={}, &&l4.len()={}, &&&l4.len()={}",
+        len1, len2, len3
+    );
+    println!(
+        "  Box.len()={}, &&Box.len()={}, &&&Box.len()={}",
+        len5, len6, len7
+    );
     println!("  ✓ receiver.method() 连续多层自动解引用");
 }
 
